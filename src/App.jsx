@@ -8,7 +8,7 @@ import {
   update,
   transaction
 } from "firebase/database"
-import "./App.css"
+import "./index.css"
 
 function App() {
   const [roomCode, setRoomCode] = useState("")
