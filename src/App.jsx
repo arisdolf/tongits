@@ -7,17 +7,27 @@ function App() {
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
 
-  function createRoom() {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase()
+  async function createRoom() {
+  const code = Math.random()
+    .toString(36)
+    .substring(2, 8)
+    .toUpperCase()
 
-    set(ref(database, "rooms/" + code), {
+  try {
+    await set(ref(database, "rooms/" + code), {
       player1: "waiting",
       player2: "waiting"
     })
 
     setRoomCode(code)
     setMessage("Room created!")
+
+    console.log("Room created:", code)
+  } catch (error) {
+    console.error("Firebase error:", error)
+    setMessage("Error: " + error.message)
   }
+}
 
   async function joinRoom() {
     const code = inputCode.toUpperCase()
