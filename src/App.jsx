@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { database } from "./firebase"
+import { database, auth } from "./firebase"
 import { ref, set, get } from "firebase/database"
 
 function App() {
@@ -8,38 +8,62 @@ function App() {
   const [message, setMessage] = useState("")
 
   async function createRoom() {
-  const code = Math.random()
-    .toString(36)
-    .substring(2, 8)
-    .toUpperCase()
+    const code = Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()
 
-  try {
-    await set(ref(database, "rooms/" + code), {
-      player1: "waiting",
-      player2: "waiting"
-    })
+    const user = auth.currentUser
 
-    setRoomCode(code)
-    setMessage("Room created!")
+    if (!user) {
+      setMessage("Player is not connected")
+      return
+    }
 
-    console.log("Room created:", code)
-  } catch (error) {
-    console.error("Firebase error:", error)
-    setMessage("Error: " + error.message)
+    try {
+      await set(ref(database, "rooms/" + code), {
+        player1: user.uid,
+        player2: null
+      })
+
+      setRoomCode(code)
+      setMessage("Room created!")
+    } catch (error) {
+      setMessage(error.message)
+    }
   }
-}
 
   async function joinRoom() {
     const code = inputCode.toUpperCase()
+    const user = auth.currentUser
 
-    const snapshot = await get(ref(database, "rooms/" + code))
+    if (!user) {
+      setMessage("Player is not connected")
+      return
+    }
 
-    if (snapshot.exists()) {
-      await set(ref(database, "rooms/" + code + "/player2"), "joined")
+    try {
+      const roomRef = ref(database, "rooms/" + code)
+      const snapshot = await get(roomRef)
+
+      if (!snapshot.exists()) {
+        setMessage("Room does not exist")
+        return
+      }
+
+      const room = snapshot.val()
+
+      if (room.player2) {
+        setMessage("Room is full")
+        return
+      }
+
+      await set(ref(database, "rooms/" + code + "/player2"), user.uid)
+
       setRoomCode(code)
       setMessage("Joined room!")
-    } else {
-      setMessage("Room does not exist")
+    } catch (error) {
+      setMessage(error.message)
     }
   }
 
