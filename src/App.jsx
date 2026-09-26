@@ -5,8 +5,7 @@ import {
   set,
   get,
   onValue,
-  update,
-  transaction
+  update
 } from "firebase/database"
 import "./index.css"
 
