@@ -15,6 +15,10 @@ input {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 .game {
   min-height: 100vh;
   display: flex;
@@ -22,6 +26,8 @@ input {
   align-items: center;
   padding: 20px;
 }
+
+/* LOBBY */
 
 .lobby {
   width: 100%;
@@ -35,9 +41,9 @@ input {
 }
 
 .title {
-  margin: 0 0 8px;
-  font-size: 42px;
-  letter-spacing: 4px;
+  margin: 0;
+  font-size: 44px;
+  letter-spacing: 5px;
 }
 
 .subtitle {
@@ -45,26 +51,11 @@ input {
   margin-bottom: 30px;
 }
 
-.room-buttons {
+.room-buttons,
+.join-area {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-button {
-  border: none;
-  border-radius: 12px;
-  padding: 14px 20px;
-  background: #d8b45a;
-  color: #172016;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.08);
 }
 
 .join-area {
@@ -82,40 +73,34 @@ input {
   color: white;
   outline: none;
   text-align: center;
-  text-transform: uppercase;
-  margin-bottom: 12px;
+  letter-spacing: 2px;
 }
 
 input:focus {
   border-color: #d8b45a;
 }
 
-.room-code {
-  margin-top: 25px;
-  padding: 15px;
-  background: #091a14;
+button:not(.card):not(.deck) {
+  border: none;
   border-radius: 12px;
+  padding: 14px 20px;
+  background: #d8b45a;
+  color: #172016;
+  font-weight: bold;
+  transition: 0.2s;
 }
 
-.room-code span {
-  display: block;
-  color: #9fb5aa;
-  font-size: 13px;
-  margin-bottom: 5px;
-}
-
-.room-code strong {
-  font-size: 28px;
-  letter-spacing: 5px;
-  color: #d8b45a;
+button:not(.card):not(.deck):hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
 }
 
 .message {
-  margin-top: 20px;
   color: #b8ccc2;
+  margin: 12px 0 0;
 }
 
-/* Game table */
+/* TABLE */
 
 .table {
   width: 100%;
@@ -129,6 +114,21 @@ input:focus {
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #c7d8d0;
+}
+
+.top-bar strong {
+  font-size: 20px;
+  color: white;
+  letter-spacing: 2px;
 }
 
 .player {
@@ -143,40 +143,87 @@ input:focus {
 .cards {
   display: flex;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
 }
 
 .card {
   width: 65px;
   height: 90px;
-  background: white;
-  color: #171717;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+  border-radius: 9px;
   margin: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  font-size: 16px;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.my-card {
+  background: white;
+  color: #171717;
+  border: 1px solid #ccc;
+}
+
+.my-card:hover {
+  transform: translateY(-15px) scale(1.05);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.35);
+  z-index: 5;
 }
 
 .opponent-card {
   background: #172f67;
   border: 2px solid white;
+  color: white;
 }
+
+/* CARD DEAL ANIMATION */
+
+.deal-animation {
+  opacity: 0;
+  animation: dealCard 0.45s ease forwards;
+}
+
+@keyframes dealCard {
+  from {
+    opacity: 0;
+    transform: translateY(-35px) scale(0.8) rotate(-5deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+/* CENTER */
 
 .middle {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 35px;
+  gap: 45px;
+}
+
+.pile-container {
+  text-align: center;
+}
+
+.pile-label {
+  font-size: 11px;
+  color: #b8ccc2;
+  margin-bottom: 7px;
+  letter-spacing: 1px;
 }
 
 .deck,
 .discard {
-  width: 70px;
-  height: 95px;
-  border-radius: 8px;
+  width: 75px;
+  height: 100px;
+  border-radius: 9px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -185,48 +232,66 @@ input:focus {
 
 .deck {
   background: #172f67;
+  color: white;
   border: 2px solid white;
+  transition: transform 0.2s;
+}
+
+.deck:hover:not(:disabled) {
+  transform: translateY(-7px);
+}
+
+.deck:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .discard {
   background: white;
   color: #111;
+  border: 1px solid #ccc;
 }
 
-.actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
+.turn-message {
+  text-align: center;
+  color: #d8b45a;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: 13px;
 }
 
-.actions button {
-  min-width: 120px;
+.card-help {
+  color: #a9c0b5;
+  font-size: 12px;
+  margin-top: 12px;
 }
 
-/* Desktop */
+/* DESKTOP */
 
 @media (min-width: 768px) {
-  .game {
-    padding: 40px;
+  .table {
+    min-height: 750px;
+    padding: 35px;
   }
 
   .card {
     width: 75px;
     height: 105px;
+    font-size: 18px;
   }
 
-  .table {
-    min-height: 750px;
-    padding: 40px;
+  .deck,
+  .discard {
+    width: 80px;
+    height: 110px;
   }
 }
 
-/* Mobile */
+/* MOBILE */
 
 @media (max-width: 600px) {
   .game {
-    padding: 10px;
+    padding: 8px;
   }
 
   .lobby {
@@ -234,14 +299,22 @@ input:focus {
   }
 
   .title {
-    font-size: 34px;
+    font-size: 35px;
   }
 
   .table {
-    min-height: calc(100vh - 20px);
+    min-height: calc(100vh - 16px);
     border-width: 6px;
     border-radius: 22px;
-    padding: 15px 10px;
+    padding: 15px 8px;
+  }
+
+  .top-bar {
+    font-size: 11px;
+  }
+
+  .top-bar strong {
+    font-size: 16px;
   }
 
   .card {
@@ -253,16 +326,24 @@ input:focus {
 
   .deck,
   .discard {
-    width: 55px;
-    height: 75px;
+    width: 58px;
+    height: 78px;
+    font-size: 12px;
   }
 
   .middle {
-    gap: 20px;
+    gap: 22px;
   }
 
-  .actions button {
-    min-width: 100px;
-    padding: 12px 10px;
+  .turn-message {
+    font-size: 11px;
+  }
+
+  .card-help {
+    font-size: 10px;
+  }
+
+  .my-card:hover {
+    transform: translateY(-8px) scale(1.03);
   }
 }
