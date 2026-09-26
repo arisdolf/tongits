@@ -50,7 +50,11 @@ function SortableCard({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    zIndex: isDragging ? 20 : selected ? 10 : 1
+    zIndex: isDragging
+      ? 20
+      : selected
+        ? 10
+        : 1
   }
 
   return (
@@ -61,11 +65,19 @@ function SortableCard({
       {...listeners}
       className={
         "card my-card " +
-        (selected ? "selected-card " : "") +
-        (isDragging ? "dragging-card " : "") +
-        (index === 0 ? "first-card" : "")
+        (selected
+          ? "selected-card "
+          : "") +
+        (isDragging
+          ? "dragging-card "
+          : "") +
+        (index === 0
+          ? "first-card"
+          : "")
       }
-      onClick={() => onSelect(card)}
+      onClick={() =>
+        onSelect(card)
+      }
     >
       {card}
     </button>
@@ -75,36 +87,58 @@ function SortableCard({
 
 function App() {
 
-  const [roomCode, setRoomCode] = useState("")
-  const [inputCode, setInputCode] = useState("")
-  const [message, setMessage] = useState("")
+  const [roomCode, setRoomCode] =
+    useState("")
 
-  const [room, setRoom] = useState(null)
-  const [game, setGame] = useState(null)
+  const [inputCode, setInputCode] =
+    useState("")
 
-  const [myHand, setMyHand] = useState([])
-  const [selectedCards, setSelectedCards] = useState([])
+  const [message, setMessage] =
+    useState("")
 
-  const [opponentCount, setOpponentCount] = useState(0)
+  const [room, setRoom] =
+    useState(null)
 
-  const [drawing, setDrawing] = useState(false)
+  const [game, setGame] =
+    useState(null)
 
-  const user = auth.currentUser
+  const [myHand, setMyHand] =
+    useState([])
+
+  const [selectedCards, setSelectedCards] =
+    useState([])
+
+  const [opponentCount, setOpponentCount] =
+    useState(0)
+
+  const [drawing, setDrawing] =
+    useState(false)
+
+  const user =
+    auth.currentUser
 
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6
-      }
-    }),
 
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 150,
-        tolerance: 5
+    useSensor(
+      PointerSensor,
+      {
+        activationConstraint: {
+          distance: 6
+        }
       }
-    })
+    ),
+
+    useSensor(
+      TouchSensor,
+      {
+        activationConstraint: {
+          delay: 150,
+          tolerance: 5
+        }
+      }
+    )
+
   )
 
 
@@ -116,69 +150,92 @@ function App() {
 
     if (!roomCode) return
 
-    const roomRef = ref(
-      database,
-      "rooms/" + roomCode
-    )
+    const roomRef =
+      ref(
+        database,
+        "rooms/" + roomCode
+      )
 
-    const unsubscribe = onValue(
-      roomRef,
-      (snapshot) => {
+    const unsubscribe =
+      onValue(
+        roomRef,
+        snapshot => {
 
-        const data = snapshot.val()
+          const data =
+            snapshot.val()
 
-        if (!data) return
+          if (!data) return
 
-        setRoom(data)
+          setRoom(data)
 
-        if (data.game) {
-          setGame(data.game)
+          if (data.game) {
+
+            setGame(
+              data.game
+            )
+
+          }
+
+          if (data.player2) {
+
+            setMessage(
+              "Player 2 joined!"
+            )
+
+          } else {
+
+            setMessage(
+              "Waiting for Player 2..."
+            )
+
+          }
+
         }
+      )
 
-        if (data.player2) {
-          setMessage("Player 2 joined!")
-        } else {
-          setMessage("Waiting for Player 2...")
-        }
-
-      }
-    )
-
-    return () => unsubscribe()
+    return () =>
+      unsubscribe()
 
   }, [roomCode])
 
 
   /*
-   * MY PRIVATE HAND
+   * MY HAND
    */
 
   useEffect(() => {
 
-    if (!roomCode || !user) return
+    if (!roomCode || !user)
+      return
 
-    const handRef = ref(
-      database,
-      "rooms/" +
-      roomCode +
-      "/hands/" +
-      user.uid
-    )
+    const handRef =
+      ref(
+        database,
+        "rooms/" +
+        roomCode +
+        "/hands/" +
+        user.uid
+      )
 
-    const unsubscribe = onValue(
-      handRef,
-      (snapshot) => {
+    const unsubscribe =
+      onValue(
+        handRef,
+        snapshot => {
 
-        const hand = snapshot.val()
+          const hand =
+            snapshot.val()
 
-        if (Array.isArray(hand)) {
-          setMyHand(hand)
+          if (Array.isArray(hand)) {
+
+            setMyHand(hand)
+
+          }
+
         }
+      )
 
-      }
-    )
-
-    return () => unsubscribe()
+    return () =>
+      unsubscribe()
 
   }, [roomCode, user])
 
@@ -197,34 +254,50 @@ function App() {
 
   useEffect(() => {
 
-    if (!roomCode || !opponentUid) return
+    if (
+      !roomCode ||
+      !opponentUid
+    ) return
 
-    const opponentHandRef = ref(
-      database,
-      "rooms/" +
-      roomCode +
-      "/hands/" +
-      opponentUid
-    )
+    const opponentHandRef =
+      ref(
+        database,
+        "rooms/" +
+        roomCode +
+        "/hands/" +
+        opponentUid
+      )
 
-    const unsubscribe = onValue(
-      opponentHandRef,
-      (snapshot) => {
+    const unsubscribe =
+      onValue(
+        opponentHandRef,
+        snapshot => {
 
-        const hand = snapshot.val()
+          const hand =
+            snapshot.val()
 
-        if (Array.isArray(hand)) {
-          setOpponentCount(hand.length)
-        } else {
-          setOpponentCount(0)
+          if (Array.isArray(hand)) {
+
+            setOpponentCount(
+              hand.length
+            )
+
+          } else {
+
+            setOpponentCount(0)
+
+          }
+
         }
+      )
 
-      }
-    )
+    return () =>
+      unsubscribe()
 
-    return () => unsubscribe()
-
-  }, [roomCode, opponentUid])
+  }, [
+    roomCode,
+    opponentUid
+  ])
 
 
   /*
@@ -233,34 +306,52 @@ function App() {
 
   async function createRoom() {
 
-    const code = Math.random()
-      .toString(36)
-      .substring(2, 8)
-      .toUpperCase()
+    const code =
+      Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase()
 
-    const currentUser = auth.currentUser
+    const currentUser =
+      auth.currentUser
 
     if (!currentUser) {
-      setMessage("Player is not connected")
+
+      setMessage(
+        "Player is not connected"
+      )
+
       return
+
     }
 
     try {
 
       await set(
-        ref(database, "rooms/" + code),
+        ref(
+          database,
+          "rooms/" + code
+        ),
         {
-          player1: currentUser.uid,
-          player2: null
+          player1:
+            currentUser.uid,
+
+          player2:
+            null
         }
       )
 
       setRoomCode(code)
-      setMessage("Room created!")
+
+      setMessage(
+        "Room created!"
+      )
 
     } catch (error) {
 
-      setMessage(error.message)
+      setMessage(
+        error.message
+      )
 
     }
 
@@ -273,39 +364,64 @@ function App() {
 
   async function joinRoom() {
 
-    const code = inputCode.toUpperCase()
+    const code =
+      inputCode.toUpperCase()
 
-    const currentUser = auth.currentUser
+    const currentUser =
+      auth.currentUser
 
     if (!currentUser) {
-      setMessage("Player is not connected")
+
+      setMessage(
+        "Player is not connected"
+      )
+
       return
+
     }
 
     if (!code) {
-      setMessage("Enter a room code")
+
+      setMessage(
+        "Enter a room code"
+      )
+
       return
+
     }
 
     try {
 
-      const roomRef = ref(
-        database,
-        "rooms/" + code
-      )
+      const roomRef =
+        ref(
+          database,
+          "rooms/" + code
+        )
 
-      const snapshot = await get(roomRef)
+      const snapshot =
+        await get(roomRef)
 
       if (!snapshot.exists()) {
-        setMessage("Room does not exist")
+
+        setMessage(
+          "Room does not exist"
+        )
+
         return
+
       }
 
-      const roomData = snapshot.val()
+      const roomData =
+        snapshot.val()
 
       if (roomData.player2) {
-        setMessage("Room is full")
+
+        setMessage(
+          "Room is full"
+        )
+
         return
+
       }
 
       await set(
@@ -319,11 +435,10 @@ function App() {
       )
 
       setRoomCode(code)
-      setMessage("Joined room!")
 
-      /*
-       * PLAYER 2 STARTS THE GAME
-       */
+      setMessage(
+        "Joined room!"
+      )
 
       if (!roomData.game) {
 
@@ -337,7 +452,9 @@ function App() {
 
     } catch (error) {
 
-      setMessage(error.message)
+      setMessage(
+        error.message
+      )
 
     }
 
@@ -354,25 +471,15 @@ function App() {
     player2
   ) {
 
-    const deck = createDeck()
+    const deck =
+      createDeck()
 
     shuffleDeck(deck)
-
-
-    /*
-     * RANDOM STARTER
-     */
 
     const starter =
       Math.random() < 0.5
         ? player1
         : player2
-
-
-    /*
-     * STARTER GETS 13
-     * OTHER PLAYER GETS 12
-     */
 
     let player1Hand
     let player2Hand
@@ -395,34 +502,27 @@ function App() {
 
     }
 
-
-    const firstDiscard = deck.pop()
-
-
     const gameData = {
 
-      deck,
+      deck: deck,
 
-      discard: [
-        firstDiscard
-      ],
+      discard: [],
 
-      starter,
+      starter: starter,
 
       currentTurn: starter,
 
-      started: true,
+      phase: "discard",
+
+      hasDrawn: false,
 
       status: "playing",
 
-      /*
-       * Used later when the round ends
-       */
+      nextStarter: null,
 
-      nextStarter: null
+      bahay: []
 
     }
-
 
     await set(
       ref(
@@ -434,7 +534,6 @@ function App() {
       gameData
     )
 
-
     await set(
       ref(
         database,
@@ -445,7 +544,6 @@ function App() {
       ),
       player1Hand
     )
-
 
     await set(
       ref(
@@ -542,12 +640,137 @@ function App() {
 
 
   /*
-   * DRAW
+   * CARD VALUE
    */
 
-  async function drawCard() {
+  function getCardValue(card) {
 
-    if (!game || !user) return
+    const value =
+      card.slice(
+        0,
+        -1
+      )
+
+    const values = {
+      A: 1,
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+      "6": 6,
+      "7": 7,
+      "8": 8,
+      "9": 9,
+      "10": 10,
+      J: 11,
+      Q: 12,
+      K: 13
+    }
+
+    return values[value]
+
+  }
+
+
+  /*
+   * CARD SUIT
+   */
+
+  function getCardSuit(card) {
+
+    return card.slice(-1)
+
+  }
+
+
+  /*
+   * CHECK VALID BAHAY
+   *
+   * Set:
+   * 3+ cards with same value
+   *
+   * Straight:
+   * 3+ consecutive cards
+   * with same suit
+   */
+
+  function isValidBahay(cards) {
+
+    if (cards.length < 3) {
+
+      return false
+
+    }
+
+    const values =
+      cards.map(
+        getCardValue
+      )
+
+    const suits =
+      cards.map(
+        getCardSuit
+      )
+
+    const sameValue =
+      values.every(
+        value =>
+          value === values[0]
+      )
+
+    if (sameValue) {
+
+      return true
+
+    }
+
+    const sameSuit =
+      suits.every(
+        suit =>
+          suit === suits[0]
+      )
+
+    if (!sameSuit) {
+
+      return false
+
+    }
+
+    const sorted =
+      [...values].sort(
+        (a, b) => a - b
+      )
+
+    for (
+      let i = 1;
+      i < sorted.length;
+      i++
+    ) {
+
+      if (
+        sorted[i] !==
+        sorted[i - 1] + 1
+      ) {
+
+        return false
+
+      }
+
+    }
+
+    return true
+
+  }
+
+
+  /*
+   * CREATE BAHAY
+   */
+
+  async function createBahay() {
+
+    if (!game || !user)
+      return
 
     if (
       game.currentTurn !==
@@ -562,35 +785,73 @@ function App() {
 
     }
 
-
     if (
-      !game.deck ||
-      game.deck.length === 0
+      game.phase !==
+      "discard"
     ) {
 
       setMessage(
-        "The deck is empty"
+        "Draw a card first"
       )
 
       return
 
     }
 
+    if (
+      selectedCards.length < 3
+    ) {
 
-    setDrawing(true)
+      setMessage(
+        "Select at least 3 cards"
+      )
 
+      return
 
-    const card =
-      game.deck[0]
+    }
 
-    const newDeck =
-      game.deck.slice(1)
+    if (
+      !isValidBahay(
+        selectedCards
+      )
+    ) {
 
-    const newHand = [
-      ...myHand,
-      card
+      setMessage(
+        "Those cards do not form a valid bahay"
+      )
+
+      return
+
+    }
+
+    const newBahay = {
+
+      id:
+        Date.now().toString(),
+
+      owner:
+        user.uid,
+
+      cards:
+        [...selectedCards]
+
+    }
+
+    const newHand =
+      myHand.filter(
+        card =>
+          !selectedCards.includes(
+            card
+          )
+      )
+
+    const currentBahay =
+      game.bahay || []
+
+    const updatedBahay = [
+      ...currentBahay,
+      newBahay
     ]
-
 
     await update(
       ref(
@@ -599,22 +860,188 @@ function App() {
         roomCode
       ),
       {
-        "game/deck": newDeck,
 
         ["hands/" + user.uid]:
-          newHand
+          newHand,
+
+        "game/bahay":
+          updatedBahay
+
       }
     )
 
+    setSelectedCards([])
 
     setMessage(
-      "Card drawn!"
+      "Bahay created!"
     )
 
+  }
 
-    setTimeout(() => {
-      setDrawing(false)
-    }, 500)
+
+  /*
+   * CHECK IF CARD CAN
+   * BE ADDED TO BAHAY
+   */
+
+  function canAddToBahay(
+    bahay,
+    card
+  ) {
+
+    const newCards = [
+      ...bahay.cards,
+      card
+    ]
+
+    return isValidBahay(
+      newCards
+    )
+
+  }
+
+
+  /*
+   * ADD CARD TO BAHAY
+   */
+
+  async function addToBahay(
+    bahayId
+  ) {
+
+    if (!game || !user)
+      return
+
+    if (
+      game.currentTurn !==
+      user.uid
+    ) {
+
+      setMessage(
+        "It's not your turn"
+      )
+
+      return
+
+    }
+
+    if (
+      game.phase !==
+      "discard"
+    ) {
+
+      setMessage(
+        "Draw a card first"
+      )
+
+      return
+
+    }
+
+    if (
+      selectedCards.length !== 1
+    ) {
+
+      setMessage(
+        "Select one card to add"
+      )
+
+      return
+
+    }
+
+    const card =
+      selectedCards[0]
+
+    const bahay =
+      (game.bahay || [])
+        .find(
+          item =>
+            item.id ===
+            bahayId
+        )
+
+    if (!bahay) {
+
+      setMessage(
+        "Bahay not found"
+      )
+
+      return
+
+    }
+
+    if (
+      !canAddToBahay(
+        bahay,
+        card
+      )
+    ) {
+
+      setMessage(
+        "That card cannot be added to this bahay"
+      )
+
+      return
+
+    }
+
+    const updatedBahay =
+      (game.bahay || [])
+        .map(
+          item => {
+
+            if (
+              item.id ===
+              bahayId
+            ) {
+
+              return {
+
+                ...item,
+
+                cards: [
+                  ...item.cards,
+                  card
+                ]
+
+              }
+
+            }
+
+            return item
+
+          }
+        )
+
+    const newHand =
+      myHand.filter(
+        item =>
+          item !== card
+      )
+
+    await update(
+      ref(
+        database,
+        "rooms/" +
+        roomCode
+      ),
+      {
+
+        ["hands/" + user.uid]:
+          newHand,
+
+        "game/bahay":
+          updatedBahay
+
+      }
+    )
+
+    setSelectedCards([])
+
+    setMessage(
+      "Card added to bahay!"
+    )
 
   }
 
@@ -625,7 +1052,8 @@ function App() {
 
   function toggleCard(card) {
 
-    if (!game || !user) return
+    if (!game || !user)
+      return
 
     if (
       game.currentTurn !==
@@ -635,7 +1063,6 @@ function App() {
       return
 
     }
-
 
     setSelectedCards(
       previous => {
@@ -664,13 +1091,12 @@ function App() {
 
   /*
    * DISCARD
-   *
-   * For now, one selected card
    */
 
   async function discardSelected() {
 
-    if (!game || !user) return
+    if (!game || !user)
+      return
 
     if (
       game.currentTurn !==
@@ -685,6 +1111,18 @@ function App() {
 
     }
 
+    if (
+      game.phase !==
+      "discard"
+    ) {
+
+      setMessage(
+        "You must draw a card first"
+      )
+
+      return
+
+    }
 
     if (
       selectedCards.length !== 1
@@ -698,10 +1136,8 @@ function App() {
 
     }
 
-
     const card =
       selectedCards[0]
-
 
     const newHand =
       myHand.filter(
@@ -709,18 +1145,15 @@ function App() {
           item !== card
       )
 
-
     const newDiscard = [
       ...(game.discard || []),
       card
     ]
 
-
     const nextPlayer =
       user.uid === room.player1
         ? room.player2
         : room.player1
-
 
     await update(
       ref(
@@ -737,11 +1170,16 @@ function App() {
           newDiscard,
 
         "game/currentTurn":
-          nextPlayer
+          nextPlayer,
+
+        "game/phase":
+          "draw",
+
+        "game/hasDrawn":
+          false
 
       }
     )
-
 
     setSelectedCards([])
 
@@ -753,18 +1191,128 @@ function App() {
 
 
   /*
+   * DRAW
+   */
+
+  async function drawCard() {
+
+    if (!game || !user)
+      return
+
+    if (
+      game.currentTurn !==
+      user.uid
+    ) {
+
+      setMessage(
+        "It's not your turn"
+      )
+
+      return
+
+    }
+
+    if (
+      game.phase !==
+      "draw"
+    ) {
+
+      setMessage(
+        "You cannot draw right now"
+      )
+
+      return
+
+    }
+
+    if (game.hasDrawn) {
+
+      setMessage(
+        "You already drew this turn"
+      )
+
+      return
+
+    }
+
+    if (
+      !game.deck ||
+      game.deck.length === 0
+    ) {
+
+      setMessage(
+        "The deck is empty"
+      )
+
+      return
+
+    }
+
+    setDrawing(true)
+
+    const card =
+      game.deck[0]
+
+    const newDeck =
+      game.deck.slice(1)
+
+    const newHand = [
+      ...myHand,
+      card
+    ]
+
+    await update(
+      ref(
+        database,
+        "rooms/" +
+        roomCode
+      ),
+      {
+
+        "game/deck":
+          newDeck,
+
+        "game/hasDrawn":
+          true,
+
+        "game/phase":
+          "discard",
+
+        ["hands/" + user.uid]:
+          newHand
+
+      }
+    )
+
+    setMessage(
+      "Card drawn!"
+    )
+
+    setTimeout(
+      () => {
+        setDrawing(false)
+      },
+      500
+    )
+
+  }
+
+
+  /*
    * DRAG REORDER
    */
 
-  async function handleDragEnd(event) {
+  async function handleDragEnd(
+    event
+  ) {
 
     const {
       active,
       over
     } = event
 
-
-    if (!over) return
+    if (!over)
+      return
 
     if (
       active.id ===
@@ -774,7 +1322,6 @@ function App() {
       return
 
     }
-
 
     const oldIndex =
       myHand.indexOf(
@@ -786,7 +1333,6 @@ function App() {
         over.id
       )
 
-
     if (
       oldIndex === -1 ||
       newIndex === -1
@@ -796,7 +1342,6 @@ function App() {
 
     }
 
-
     const reordered =
       arrayMove(
         myHand,
@@ -804,9 +1349,9 @@ function App() {
         newIndex
       )
 
-
-    setMyHand(reordered)
-
+    setMyHand(
+      reordered
+    )
 
     await set(
       ref(
@@ -830,8 +1375,7 @@ function App() {
 
 
   const starterName =
-    game &&
-    room
+    game && room
       ? game.starter ===
         room.player1
         ? "Player 1"
@@ -842,7 +1386,6 @@ function App() {
   return (
 
     <div className="game">
-
 
       {!roomCode ? (
 
@@ -856,7 +1399,6 @@ function App() {
             Play Tongits with someone anywhere
           </p>
 
-
           <div className="room-buttons">
 
             <button
@@ -867,16 +1409,16 @@ function App() {
 
           </div>
 
-
           <div className="join-area">
 
             <input
               value={inputCode}
-              onChange={(e) =>
-                setInputCode(
-                  e.target.value
-                    .toUpperCase()
-                )
+              onChange={
+                e =>
+                  setInputCode(
+                    e.target.value
+                      .toUpperCase()
+                  )
               }
               placeholder="ENTER ROOM CODE"
               maxLength="6"
@@ -890,7 +1432,6 @@ function App() {
 
           </div>
 
-
           <p className="message">
             {message}
           </p>
@@ -900,7 +1441,6 @@ function App() {
       ) : (
 
         <div className="table">
-
 
           <div className="top-bar">
 
@@ -915,6 +1455,8 @@ function App() {
           </div>
 
 
+          {/* OPPONENT */}
+
           <div className="player opponent">
 
             <div className="player-name">
@@ -924,7 +1466,8 @@ function App() {
             <div className="cards">
 
               {Array.from({
-                length: opponentCount
+                length:
+                  opponentCount
               }).map(
                 (_, index) => (
 
@@ -947,8 +1490,99 @@ function App() {
           </div>
 
 
-          <div className="middle">
+          {/* TABLE */}
 
+          <div className="bahay-area">
+
+            <div className="bahay-title">
+              BAHAY
+            </div>
+
+            <div className="bahay-list">
+
+              {(game?.bahay || []).length === 0 ? (
+
+                <div className="empty-bahay">
+                  No bahay yet
+                </div>
+
+              ) : (
+
+                (game?.bahay || []).map(
+                  bahay => (
+
+                    <div
+                      className={
+                        "bahay " +
+                        (
+                          bahay.owner ===
+                          user?.uid
+                            ? "my-bahay"
+                            : "opponent-bahay"
+                        )
+                      }
+                      key={bahay.id}
+                    >
+
+                      <div className="bahay-header">
+
+                        <span>
+                          {bahay.owner ===
+                          user?.uid
+                            ? "YOUR BAHAY"
+                            : "OPPONENT BAHAY"}
+                        </span>
+
+                      </div>
+
+                      <div className="bahay-cards">
+
+                        {bahay.cards.map(
+                          card => (
+
+                            <div
+                              className="card bahay-card"
+                              key={card}
+                            >
+                              {card}
+                            </div>
+
+                          )
+                        )}
+
+                      </div>
+
+                      {isMyTurn && (
+                        <button
+                          className="layoff-button"
+                          onClick={() =>
+                            addToBahay(
+                              bahay.id
+                            )
+                          }
+                          disabled={
+                            selectedCards.length !== 1
+                          }
+                        >
+                          ADD CARD
+                        </button>
+                      )}
+
+                    </div>
+
+                  )
+                )
+
+              )}
+
+            </div>
+
+          </div>
+
+
+          {/* DECK AND DISCARD */}
+
+          <div className="middle">
 
             <div className="pile-container">
 
@@ -959,12 +1593,21 @@ function App() {
               <button
                 className={
                   "deck " +
-                  (drawing
-                    ? "deck-drawing"
-                    : "")
+                  (
+                    drawing
+                      ? "deck-drawing"
+                      : ""
+                  )
                 }
-                onClick={drawCard}
-                disabled={!isMyTurn}
+                onClick={
+                  drawCard
+                }
+                disabled={
+                  !isMyTurn ||
+                  game?.phase !==
+                    "draw" ||
+                  game?.hasDrawn
+                }
               >
                 {game
                   ? game.deck.length
@@ -997,21 +1640,27 @@ function App() {
           </div>
 
 
+          {/* TURN */}
+
           <div className="turn-message">
 
             {isMyTurn
-              ? "YOUR TURN"
+              ? game?.phase ===
+                "draw"
+                ? "YOUR TURN — DRAW"
+                : "YOUR TURN — PLAY / DISCARD"
               : "OPPONENT'S TURN"}
 
           </div>
 
+
+          {/* MY HAND */}
 
           <div className="player">
 
             <div className="player-name">
               You
             </div>
-
 
             <DndContext
               sensors={sensors}
@@ -1059,7 +1708,24 @@ function App() {
             </DndContext>
 
 
+            {/* ACTIONS */}
+
             <div className="hand-actions">
+
+              <button
+                onClick={
+                  createBahay
+                }
+                disabled={
+                  !isMyTurn ||
+                  game?.phase !==
+                    "discard" ||
+                  selectedCards.length < 3
+                }
+              >
+                BAHAY
+              </button>
+
 
               <button
                 onClick={
@@ -1091,17 +1757,42 @@ function App() {
             <p className="card-help">
 
               {isMyTurn
-                ? "Drag cards to reorder them. Tap cards to select them."
+
+                ? game?.phase ===
+                  "draw"
+
+                  ? "Draw one card, then create or add to a bahay, then discard."
+
+                  : "Select cards to create a bahay, add to a bahay, or discard one card."
+
                 : "Wait for your turn"}
 
             </p>
 
 
-            {game && game.starter && (
+            {selectedCards.length > 0 && (
+
+              <p className="selection-info">
+
+                Selected:
+                {" "}
+                {selectedCards.join(" ")}
+
+              </p>
+
+            )}
+
+
+            {game &&
+            game.starter && (
 
               <p className="starter-info">
 
-                {starterName} started with 13 cards
+                {starterName}
+                {" "}
+                started with
+                {" "}
+                13 cards
 
               </p>
 
@@ -1113,7 +1804,6 @@ function App() {
           <p className="message">
             {message}
           </p>
-
 
         </div>
 
