@@ -50,7 +50,16 @@ useEffect(() => {
   hasLoadedRoomRef.current = false
 }, [roomCode])
   const user = auth.currentUser
-
+    /*
+   * OPPONENT HAND COUNT
+   */
+  const opponentUid =
+    room && user
+      ? room.player1 === user.uid
+        ? room.player2
+        : room.player1
+      : null
+      
   const sensors = useSensors(
 
     
@@ -207,15 +216,7 @@ useEffect(() => {
   }, [game && game.currentTurn, user])
 
 
-  /*
-   * OPPONENT HAND COUNT
-   */
-  const opponentUid =
-    room && user
-      ? room.player1 === user.uid
-        ? room.player2
-        : room.player1
-      : null
+
 
 
 
