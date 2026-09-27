@@ -29,6 +29,76 @@ import { CSS } from "@dnd-kit/utilities"
 import "./index.css"
 
 
+/*
+ * CARD HELPERS
+ */
+
+function getCardRank(card) {
+  return card.slice(0, -1)
+}
+
+function getCardSuitChar(card) {
+  return card.slice(-1)
+}
+
+function isRedSuit(suit) {
+  return suit === "♥" || suit === "♦"
+}
+
+
+/*
+ * PLAYING CARD FACE
+ * Real card look: corner rank+suit (top-left, mirrored bottom-right)
+ * plus a big center suit glyph. Color follows the suit, not the owner.
+ */
+
+function PlayingCard({ card, size = "normal" }) {
+
+  const rank = getCardRank(card)
+  const suit = getCardSuitChar(card)
+  const red = isRedSuit(suit)
+
+  return (
+    <div
+      className={
+        "playing-card " +
+        size +
+        " " +
+        (red ? "red-suit" : "black-suit")
+      }
+    >
+      <span className="pc-corner pc-corner-top">
+        <span className="pc-rank">{rank}</span>
+        <span className="pc-suit">{suit}</span>
+      </span>
+
+      <span className="pc-center-suit">{suit}</span>
+
+      <span className="pc-corner pc-corner-bottom">
+        <span className="pc-rank">{rank}</span>
+        <span className="pc-suit">{suit}</span>
+      </span>
+    </div>
+  )
+}
+
+
+/*
+ * CARD BACK
+ * Shared back design for the deck and the opponent's hand.
+ */
+
+function CardBack({ className = "" }) {
+  return (
+    <div className={"card-back " + className}>
+      <div className="card-back-frame">
+        <div className="card-back-emblem">T</div>
+      </div>
+    </div>
+  )
+}
+
+
 function SortableCard({
   card,
   index,
@@ -49,7 +119,7 @@ function SortableCard({
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? "none" : transition,
     zIndex: isDragging
       ? 20
       : selected
@@ -79,7 +149,7 @@ function SortableCard({
         onSelect(card)
       }
     >
-      {card}
+      <PlayingCard card={card} />
     </button>
   )
 }
@@ -114,6 +184,9 @@ function App() {
   const [drawing, setDrawing] =
     useState(false)
 
+  const [showDiscardHistory, setShowDiscardHistory] =
+    useState(false)
+
   const user =
     auth.currentUser
 
@@ -124,17 +197,18 @@ function App() {
       PointerSensor,
       {
         activationConstraint: {
-          distance: 6
+          distance: 4
         }
       }
     ),
 
+    // Distance-based (not delay-based) so a touch drag
+    // starts the instant a finger moves, with no hold wait.
     useSensor(
       TouchSensor,
       {
         activationConstraint: {
-          delay: 150,
-          tolerance: 5
+          distance: 4
         }
       }
     )
@@ -1367,6 +1441,87 @@ function App() {
   }
 
 
+  /*
+   * SORT HAND (persists the new order to Firebase,
+   * same as a manual drag reorder would)
+   */
+
+  async function applySortedHand(sorted) {
+
+    setMyHand(sorted)
+
+    if (roomCode && user) {
+
+      await set(
+        ref(
+          database,
+          "rooms/" +
+          roomCode +
+          "/hands/" +
+          user.uid
+        ),
+        sorted
+      )
+
+    }
+
+  }
+
+  const suitOrder = {
+    "♠": 0,
+    "♥": 1,
+    "♦": 2,
+    "♣": 3
+  }
+
+  function sortHandBySuit() {
+
+    const sorted =
+      [...myHand].sort(
+        (a, b) => {
+
+          const suitDiff =
+            suitOrder[getCardSuit(a)] -
+            suitOrder[getCardSuit(b)]
+
+          if (suitDiff !== 0) {
+            return suitDiff
+          }
+
+          return (
+            getCardValue(a) -
+            getCardValue(b)
+          )
+
+        }
+      )
+
+    applySortedHand(sorted)
+
+    setMessage(
+      "Hand sorted by suit"
+    )
+
+  }
+
+  function sortHandByRank() {
+
+    const sorted =
+      [...myHand].sort(
+        (a, b) =>
+          getCardValue(b) -
+          getCardValue(a)
+      )
+
+    applySortedHand(sorted)
+
+    setMessage(
+      "Hand sorted highest to lowest"
+    )
+
+  }
+
+
   const isMyTurn =
     game &&
     user &&
@@ -1381,6 +1536,9 @@ function App() {
         ? "Player 1"
         : "Player 2"
       : ""
+
+  const discardPile =
+    game?.discard || []
 
 
   return (
@@ -1472,10 +1630,10 @@ function App() {
                 (_, index) => (
 
                   <div
-                    className="card opponent-card"
+                    className="card"
                     key={index}
                   >
-                    ?
+                    <CardBack />
                   </div>
 
                 )
@@ -1538,13 +1696,16 @@ function App() {
                       <div className="bahay-cards">
 
                         {bahay.cards.map(
-                          card => (
+                          (card, i) => (
 
                             <div
-                              className="card bahay-card"
-                              key={card}
+                              className="bahay-card"
+                              key={card + i}
                             >
-                              {card}
+                              <PlayingCard
+                                card={card}
+                                size="small"
+                              />
                             </div>
 
                           )
@@ -1609,9 +1770,12 @@ function App() {
                   game?.hasDrawn
                 }
               >
-                {game
-                  ? game.deck.length
-                  : 0}
+                <CardBack className="deck-back" />
+                <span className="deck-count">
+                  {game
+                    ? game.deck.length
+                    : 0}
+                </span>
               </button>
 
             </div>
@@ -1625,15 +1789,38 @@ function App() {
 
               <div className="discard">
 
-                {game &&
-                game.discard &&
-                game.discard.length > 0
-                  ? game.discard[
-                      game.discard.length - 1
-                    ]
-                  : "—"}
+                {discardPile.length > 0 ? (
+
+                  <PlayingCard
+                    card={
+                      discardPile[
+                        discardPile.length - 1
+                      ]
+                    }
+                    size="small"
+                  />
+
+                ) : (
+
+                  <span className="discard-empty">
+                    —
+                  </span>
+
+                )}
 
               </div>
+
+              <button
+                className="view-discards-button"
+                onClick={() =>
+                  setShowDiscardHistory(true)
+                }
+                disabled={
+                  discardPile.length === 0
+                }
+              >
+                VIEW ALL
+              </button>
 
             </div>
 
@@ -1706,6 +1893,33 @@ function App() {
               </SortableContext>
 
             </DndContext>
+
+
+            {/* SORT */}
+
+            <div className="sort-actions">
+
+              <button
+                className="sort-button"
+                onClick={sortHandBySuit}
+                disabled={
+                  myHand.length === 0
+                }
+              >
+                SORT BY SUIT
+              </button>
+
+              <button
+                className="sort-button"
+                onClick={sortHandByRank}
+                disabled={
+                  myHand.length === 0
+                }
+              >
+                SORT HIGH — LOW
+              </button>
+
+            </div>
 
 
             {/* ACTIONS */}
@@ -1804,6 +2018,73 @@ function App() {
           <p className="message">
             {message}
           </p>
+
+
+          {/* DISCARD HISTORY MODAL */}
+
+          {showDiscardHistory && (
+
+            <div
+              className="modal-overlay"
+              onClick={() =>
+                setShowDiscardHistory(false)
+              }
+            >
+
+              <div
+                className="modal-panel"
+                onClick={
+                  e => e.stopPropagation()
+                }
+              >
+
+                <div className="modal-header">
+
+                  <span>
+                    DISCARDED CARDS
+                    {" "}
+                    ({discardPile.length})
+                  </span>
+
+                  <button
+                    className="modal-close"
+                    onClick={() =>
+                      setShowDiscardHistory(false)
+                    }
+                  >
+                    ✕
+                  </button>
+
+                </div>
+
+                <div className="modal-grid">
+
+                  {discardPile
+                    .slice()
+                    .reverse()
+                    .map(
+                      (card, i) => (
+
+                        <div
+                          className="modal-card"
+                          key={card + i}
+                        >
+                          <PlayingCard
+                            card={card}
+                            size="small"
+                          />
+                        </div>
+
+                      )
+                    )}
+
+                </div>
+
+              </div>
+
+            </div>
+
+          )}
 
         </div>
 

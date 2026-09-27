@@ -160,6 +160,7 @@ button:disabled {
     inset 0 0 40px rgba(0, 0, 0, 0.12);
 
   overflow: hidden;
+  position: relative;
 
   animation: tableIn 0.5s ease;
 }
@@ -218,7 +219,7 @@ button:disabled {
 
 
 /* =========================
-   CARDS
+   CARDS (container)
 ========================= */
 
 .cards {
@@ -235,12 +236,9 @@ button:disabled {
 
   border-radius: 9px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-weight: bold;
-  font-size: 16px;
+  padding: 0;
+  border: none;
+  background: transparent;
 
   position: relative;
 
@@ -248,30 +246,23 @@ button:disabled {
   -webkit-user-select: none;
 
   touch-action: none;
+
+  will-change: transform;
 }
 
 
-/* PLAYER CARD */
+/* PLAYER CARD BUTTON WRAPPER */
 
 .my-card {
-  background:
-    linear-gradient(
-      145deg,
-      #ffffff,
-      #eeeeee
-    );
-
-  color: #171717;
-
-  border: 1px solid #ccc;
-
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.2);
 
+  border-radius: 9px;
+
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    filter 0.2s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
 }
 
 .my-card:hover {
@@ -297,13 +288,12 @@ button:disabled {
 }
 
 
-/* DRAGGING */
+/* DRAGGING — no transition here, so it tracks the pointer instantly */
 
 .dragging-card {
-  transform:
-    translateY(-25px)
-    scale(1.1)
-    rotate(3deg);
+  transition: none !important;
+
+  transform-origin: center center;
 
   box-shadow:
     0 25px 40px rgba(0, 0, 0, 0.45);
@@ -313,24 +303,136 @@ button:disabled {
   cursor: grabbing;
 }
 
+.dragging-card .playing-card {
+  transform: scale(1.08) rotate(3deg);
+  transition: transform 0.08s ease;
+}
 
-/* OPPONENT */
 
-.opponent-card {
+/* =========================
+   REAL CARD FACE
+========================= */
+
+.playing-card {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(160deg, #ffffff, #f3f3f0);
+  border: 1px solid #d6d6d2;
+  border-radius: 9px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  padding: 4px 5px;
+
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+
+  user-select: none;
+}
+
+.playing-card.red-suit {
+  color: #b3242c;
+}
+
+.playing-card.black-suit {
+  color: #1a1a1a;
+}
+
+.pc-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.pc-corner-bottom {
+  align-self: flex-end;
+  transform: rotate(180deg);
+}
+
+.pc-rank {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.pc-suit {
+  font-size: 11px;
+}
+
+.pc-center-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  opacity: 0.92;
+}
+
+.playing-card.small .pc-rank {
+  font-size: 9px;
+}
+
+.playing-card.small .pc-suit {
+  font-size: 8px;
+}
+
+.playing-card.small .pc-center-suit {
+  font-size: 17px;
+}
+
+.playing-card.small {
+  padding: 2px 3px;
+  border-radius: 6px;
+}
+
+
+/* =========================
+   CARD BACK
+========================= */
+
+.card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 9px;
+
   background:
     repeating-linear-gradient(
       45deg,
-      #172f67,
-      #172f67 5px,
-      #203d80 5px,
-      #203d80 10px
+      #142a5c,
+      #142a5c 6px,
+      #1c3b7a 6px,
+      #1c3b7a 12px
     );
 
-  border: 2px solid white;
-  color: white;
+  border: 2px solid #e7d8ab;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.card-back-frame {
+  width: 68%;
+  height: 68%;
+  border: 1.5px solid rgba(231, 216, 171, 0.8);
+  border-radius: 50%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-back-emblem {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: bold;
+  color: #e7d8ab;
+  font-size: 20px;
 }
 
 
@@ -375,7 +477,7 @@ button:disabled {
 .middle {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 45px;
 }
 
@@ -402,21 +504,14 @@ button:disabled {
   align-items: center;
 
   font-weight: bold;
+
+  position: relative;
 }
 
 .deck {
-  background:
-    repeating-linear-gradient(
-      45deg,
-      #172f67,
-      #172f67 6px,
-      #203d80 6px,
-      #203d80 12px
-    );
-
-  color: white;
-
-  border: 2px solid white;
+  padding: 0;
+  border: none;
+  background: transparent;
 
   transition:
     transform 0.2s ease,
@@ -425,7 +520,9 @@ button:disabled {
 
 .deck:hover:not(:disabled) {
   transform: translateY(-7px) scale(1.03);
+}
 
+.deck:hover:not(:disabled) .deck-back {
   box-shadow:
     0 12px 20px rgba(0, 0, 0, 0.3);
 }
@@ -435,12 +532,22 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.discard {
-  background: white;
-  color: #111;
-  border: 1px solid #ccc;
+.deck-count {
+  position: relative;
+  z-index: 2;
+  color: white;
+  font-size: 15px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
 
+.discard {
+  background: transparent;
   animation: discardAppear 0.3s ease;
+}
+
+.discard-empty {
+  color: #b8ccc2;
+  font-weight: normal;
 }
 
 @keyframes discardAppear {
@@ -453,6 +560,14 @@ button:disabled {
     opacity: 1;
     transform: scale(1) rotate(0);
   }
+}
+
+.view-discards-button {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 10px;
+  border-radius: 8px;
+  letter-spacing: 1px;
 }
 
 
@@ -489,8 +604,32 @@ button:disabled {
 
 
 /* =========================
-   HAND ACTIONS
+   SORT + HAND ACTIONS
 ========================= */
+
+.sort-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sort-button {
+  background: transparent;
+  border: 1px solid #3b5d4e;
+  color: #cfe3d8;
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 10px;
+}
+
+.sort-button:hover:not(:disabled) {
+  border-color: #d8b45a;
+  color: #d8b45a;
+  transform: none;
+  filter: none;
+}
 
 .hand-actions {
   display: flex;
@@ -517,6 +656,90 @@ button:disabled {
 
 
 /* =========================
+   DISCARD HISTORY MODAL
+========================= */
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 12, 9, 0.72);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  z-index: 50;
+
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80%;
+
+  background: #10261e;
+  border: 1px solid #28483b;
+  border-radius: 16px;
+
+  padding: 18px;
+
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #d8b45a;
+  font-weight: bold;
+
+  margin-bottom: 14px;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #cfe3d8;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+.modal-close:hover {
+  color: #d8b45a;
+  transform: none;
+  filter: none;
+}
+
+.modal-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.modal-card {
+  width: 45px;
+  height: 63px;
+  position: relative;
+}
+
+
+/* =========================
    DESKTOP
 ========================= */
 
@@ -530,7 +753,18 @@ button:disabled {
   .card {
     width: 75px;
     height: 105px;
-    font-size: 18px;
+  }
+
+  .pc-rank {
+    font-size: 15px;
+  }
+
+  .pc-suit {
+    font-size: 12px;
+  }
+
+  .pc-center-suit {
+    font-size: 30px;
   }
 
   .deck,
@@ -578,8 +812,19 @@ button:disabled {
   .card {
     width: 48px;
     height: 68px;
-    font-size: 13px;
     margin: 2px;
+  }
+
+  .pc-rank {
+    font-size: 10px;
+  }
+
+  .pc-suit {
+    font-size: 9px;
+  }
+
+  .pc-center-suit {
+    font-size: 18px;
   }
 
   .deck,
@@ -599,6 +844,11 @@ button:disabled {
 
   .card-help {
     font-size: 10px;
+  }
+
+  .sort-button {
+    font-size: 10px;
+    padding: 7px 10px;
   }
 
   .hand-actions button {
@@ -667,19 +917,14 @@ button:disabled {
   display: flex;
   justify-content: center;
   gap: 4px;
+  flex-wrap: wrap;
 }
 
 .bahay-card {
   width: 45px;
   height: 63px;
   min-width: 45px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  color: #111;
-  border-radius: 6px;
+  position: relative;
 }
 
 .layoff-button {
@@ -702,4 +947,3 @@ button:disabled {
   font-size: 13px;
   opacity: 0.8;
 }
-
