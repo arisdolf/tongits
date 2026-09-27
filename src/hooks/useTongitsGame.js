@@ -162,7 +162,29 @@ useEffect(() => {
 
 }, [roomCode, user, opponentUid, presence[opponentUid]?.online])
 
+    useEffect(() => {
 
+    if (!roomCode || !opponentUid) return
+
+    const opponentHandRef = ref(
+      database,
+      "rooms/" + roomCode + "/hands/" + opponentUid
+    )
+
+    const unsubscribe = onValue(opponentHandRef, snapshot => {
+      const hand = snapshot.val()
+      if (Array.isArray(hand)) {
+        setOpponentCount(hand.length)
+      } else {
+        setOpponentCount(0)
+      }
+    })
+
+    return () => unsubscribe()
+
+  }, [roomCode, opponentUid])
+
+  
   /*
    * CLEAR THE "NEW CARD" INDICATOR
    * once it's no longer in hand, or once
@@ -195,27 +217,7 @@ useEffect(() => {
         : room.player1
       : null
 
-  useEffect(() => {
 
-    if (!roomCode || !opponentUid) return
-
-    const opponentHandRef = ref(
-      database,
-      "rooms/" + roomCode + "/hands/" + opponentUid
-    )
-
-    const unsubscribe = onValue(opponentHandRef, snapshot => {
-      const hand = snapshot.val()
-      if (Array.isArray(hand)) {
-        setOpponentCount(hand.length)
-      } else {
-        setOpponentCount(0)
-      }
-    })
-
-    return () => unsubscribe()
-
-  }, [roomCode, opponentUid])
 
   /*
  * LEAVE ROOM
