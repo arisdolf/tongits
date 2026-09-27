@@ -8,6 +8,7 @@ import BahayArea from "./components/BahayArea"
 import DeckAndDiscard from "./components/DeckAndDiscard"
 import PlayerHand from "./components/PlayerHand"
 import DiscardHistoryModal from "./components/DiscardHistoryModal"
+import WinModal from "./components/winModal"
 
 import "./index.css"
 
@@ -115,6 +116,12 @@ function App() {
         <p className="message">
           {g.message}
         </p>
+          <WinModal
+  game={g.game}
+  room={g.room}
+  currentUserId={g.user?.uid}
+  onRematch={g.rematch}
+/>
 
         <DiscardHistoryModal
           open={g.showDiscardHistory}

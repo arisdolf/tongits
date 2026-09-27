@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef } from "react"
 import { database, auth } from "../firebase"
 import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp } from "firebase/database"
+import {
+  getCardValue,
+  getCardSuit,
+  getHandValue,
+  createDeck,
+  shuffleDeck,
+  isValidBahay,
+  canAddToBahay,
+  suitOrder
+} from "../utils/cardUtils"
 
 import {
   PointerSensor,
@@ -11,15 +21,7 @@ import {
 
 import { arrayMove } from "@dnd-kit/sortable"
 
-import {
-  getCardValue,
-  getCardSuit,
-  createDeck,
-  shuffleDeck,
-  isValidBahay,
-  canAddToBahay,
-  suitOrder
-} from "../utils/cardUtils"
+
 
 /*
  * useTongitsGame
@@ -126,6 +128,29 @@ useEffect(() => {
   /*
    * MY HAND
    */
+  /*
+ * MY HAND
+ */
+useEffect(() => {
+
+  if (!roomCode || !user) return
+
+  const handRef = ref(
+    database,
+    "rooms/" + roomCode + "/hands/" + user.uid
+  )
+
+  const unsubscribe = onValue(handRef, snapshot => {
+    const hand = snapshot.val()
+    if (Array.isArray(hand)) {
+      setMyHand(hand)
+    }
+  })
+
+  return () => unsubscribe()
+
+}, [roomCode, user])
+
  /*
  * PRESENCE — MARK MYSELF ONLINE
  * Registers what Firebase should do to MY presence node
@@ -387,6 +412,7 @@ async function leaveRoom() {
    * CREATE BAHAY
    */
   async function createBahay() {
+    if (game.status === "finished") return
 
     if (!game || !user) return
 
@@ -435,7 +461,7 @@ async function leaveRoom() {
    * ADD CARD TO BAHAY
    */
   async function addToBahay(bahayId) {
-
+    if (game.status === "finished") return
     if (!game || !user) return
 
     if (game.currentTurn !== user.uid) {
@@ -490,7 +516,7 @@ async function leaveRoom() {
    * SELECT CARD
    */
   function toggleCard(card) {
-
+    if (game.status === "finished") return
     if (!game || !user) return
 
     if (game.currentTurn !== user.uid) return
@@ -511,27 +537,37 @@ async function leaveRoom() {
    * both the DISCARD button and a drag-to-the-pile drop
    * can share it.
    */
-  async function performDiscard(card) {
+ async function performDiscard(card) {
 
-    const newHand = myHand.filter(item => item !== card)
-    const newDiscard = [...(game.discard || []), card]
-    const nextPlayer = user.uid === room.player1 ? room.player2 : room.player1
+  const newHand = myHand.filter(item => item !== card)
+  const newDiscard = [...(game.discard || []), card]
+  const nextPlayer = user.uid === room.player1 ? room.player2 : room.player1
 
-    await update(ref(database, "rooms/" + roomCode), {
-      ["hands/" + user.uid]: newHand,
-      "game/discard": newDiscard,
-      "game/currentTurn": nextPlayer,
-      "game/phase": "draw",
-      "game/hasDrawn": false
-    })
-
-    setSelectedCards([])
-    setMessage("Card discarded")
-
+  const updates = {
+    ["hands/" + user.uid]: newHand,
+    "game/discard": newDiscard
   }
 
-  async function discardSelected() {
+  if (newHand.length === 0) {
+    // Went out — instant win, game over right here
+    updates["game/status"] = "finished"
+    updates["game/winner"] = user.uid
+    updates["game/winReason"] = "emptyHand"
+  } else {
+    updates["game/currentTurn"] = nextPlayer
+    updates["game/phase"] = "draw"
+    updates["game/hasDrawn"] = false
+  }
 
+  await update(ref(database, "rooms/" + roomCode), updates)
+
+  setSelectedCards([])
+  setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card discarded")
+
+}
+
+  async function discardSelected() {
+    if (game.status === "finished") return
     if (!game || !user) return
 
     if (game.currentTurn !== user.uid) {
@@ -557,7 +593,43 @@ async function leaveRoom() {
   /*
    * DRAW
    */
+  /*
+ * END GAME BY LOWEST COUNT
+ * Called when the deck runs out and nobody has gone out.
+ * Reads BOTH hands directly from Firebase (not just local
+ * state) since we only track our own hand locally.
+ */
+async function endGameByLowestCount() {
+
+  const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
+  const hands = handsSnapshot.val() || {}
+
+  const p1Value = getHandValue(hands[room.player1] || [])
+  const p2Value = getHandValue(hands[room.player2] || [])
+
+  let winner
+
+  if (p1Value < p2Value) {
+    winner = room.player1
+  } else if (p2Value < p1Value) {
+    winner = room.player2
+  } else {
+    winner = "tie"
+  }
+
+  await update(ref(database, "rooms/" + roomCode), {
+    "game/status": "finished",
+    "game/winner": winner,
+    "game/winReason": "lowestCount"
+  })
+
+}
   async function drawCard() {
+    if (game.status === "finished") return
+    if (!game.deck || game.deck.length === 0) {
+  await endGameByLowestCount()
+  return
+}
 
     if (!game || !user) return
 
@@ -600,6 +672,48 @@ async function leaveRoom() {
     setTimeout(() => setDrawing(false), 500)
 
   }
+
+  /*
+ * END GAME BY LOWEST COUNT
+ * Called when the deck runs out and nobody has gone out.
+ * Reads BOTH hands directly from Firebase (not just local
+ * state) since we only track our own hand locally.
+ */
+async function endGameByLowestCount() {
+
+  const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
+  const hands = handsSnapshot.val() || {}
+
+  const p1Value = getHandValue(hands[room.player1] || [])
+  const p2Value = getHandValue(hands[room.player2] || [])
+
+  let winner
+
+  if (p1Value < p2Value) {
+    winner = room.player1
+  } else if (p2Value < p1Value) {
+    winner = room.player2
+  } else {
+    winner = "tie"
+  }
+
+  await update(ref(database, "rooms/" + roomCode), {
+    "game/status": "finished",
+    "game/winner": winner,
+    "game/winReason": "lowestCount"
+  })
+
+}
+
+async function rematch() {
+
+  if (!roomCode || !room) return
+
+  await startGame(roomCode, room.player1, room.player2)
+  setSelectedCards([])
+  setMessage("Rematch started!")
+
+}
 
 
   /*
@@ -733,6 +847,7 @@ async function leaveRoom() {
     sortHandBySuit,
     sortHandByRank,
     isMyTurn,
+    rematch,
     starterName,
     discardPile,
     leaveRoom,

@@ -4,6 +4,9 @@
  * Everything else (components and the game hook) imports
  * whatever it needs from here instead of redefining it.
  */
+export function getHandValue(hand) {
+  return hand.reduce((total, card) => total + getCardValue(card), 0)
+}
 
 export function getCardRank(card) {
   return card.slice(0, -1)

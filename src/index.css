@@ -1260,3 +1260,32 @@ button:disabled {
 
   animation: warnPulse 1.4s infinite;
 }
+
+.win-panel {
+  text-align: center;
+  max-width: 380px;
+}
+
+.win-title {
+  font-size: 26px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #d8b45a;
+  margin-bottom: 10px;
+  animation: winPulse 1.2s infinite;
+}
+
+@keyframes winPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.win-reason {
+  color: #cfe3d8;
+  margin-bottom: 20px;
+}
+
+.rematch-button {
+  min-width: 160px;
+}
+
