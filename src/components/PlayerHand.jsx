@@ -89,15 +89,16 @@ function PlayerHand({
         <div className="cards my-hand">
 
           {myHand.map((card, index) => (
-            <SortableCard
-              key={card}
-              card={card}
-              index={index}
-              selected={selectedCards.includes(card)}
-              isNew={card === newlyDrawnCard}
-              onSelect={onSelectCard}
-            />
-          ))}
+  <SortableCard
+    key={card + "-" + index}
+    id={card + "-" + index}
+    card={card}
+    index={index}
+    selected={selectedCards.includes(card)}
+    isNew={card === newlyDrawnCard}
+    onSelect={onSelectCard}
+  />
+))}
 
         </div>
 

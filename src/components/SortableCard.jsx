@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities"
 import PlayingCard from "./PlayingCard"
 
 function SortableCard({
+  id,
   card,
   index,
   selected,
@@ -18,7 +19,7 @@ function SortableCard({
     transition,
     isDragging
   } = useSortable({
-    id: card
+    id: id
   })
 
   const style = {
