@@ -36,19 +36,19 @@ function App() {
       <div className="table">
 
         <div className="top-bar">
-  <strong>TONGITS</strong>
-  <span>ROOM {g.roomCode}</span>
-  <button className="leave-button" onClick={g.leaveRoom}>
-    LEAVE
-  </button>
-</div>
+          <strong>TONGITS</strong>
+          <span>ROOM {g.roomCode}</span>
+          <button className="leave-button" onClick={g.leaveRoom}>
+            LEAVE
+          </button>
+        </div>
 
         <OpponentPanel opponentCount={g.opponentCount} />
         {g.opponentDisconnected && (
-  <div className="disconnect-banner">
-    ⚠ Opponent disconnected — waiting for them to return...
-  </div>
-)}
+          <div className="disconnect-banner">
+            ⚠ Opponent disconnected — waiting for them to return...
+          </div>
+        )}
 
 
         <BahayArea
@@ -116,12 +116,12 @@ function App() {
         <p className="message">
           {g.message}
         </p>
-          <WinModal
-  game={g.game}
-  room={g.room}
-  currentUserId={g.user?.uid}
-  onRematch={g.rematch}
-/>
+        <WinModal
+          game={g.game}
+          room={g.room}
+          currentUserId={g.user?.uid}
+          onRematch={g.rematch}
+        />
 
         <DiscardHistoryModal
           open={g.showDiscardHistory}
