@@ -1,3 +1,6 @@
+import "../styles/Modal.css"
+import "../styles/WinModal.css"
+
 function WinModal({ game, room, currentUserId, onRematch }) {
 
   if (!game || game.status !== "finished") {

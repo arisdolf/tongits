@@ -1,5 +1,6 @@
 import PlayingCard from "./PlayingCard"
-
+import "../styles/Modal.css"
+import "../styles/DiscardHistoryModal.css"
 function DiscardHistoryModal({ open, onClose, discardPile }) {
 
   if (!open) {

@@ -1,6 +1,6 @@
 import PlayingCard from "./PlayingCard"
 import { canAddToBahay } from "../utils/cardUtils"
-
+import "../styles/BahayArea.css"
 function BahayArea({
   bahayList,
   isMyTurn,

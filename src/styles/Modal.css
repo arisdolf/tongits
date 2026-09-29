@@ -1,0 +1,33 @@
+/* =========================
+   MODAL — shared overlay + panel
+   Used by: DiscardHistoryModal.jsx, WinModal.jsx
+========================= */
+
+.modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 12, 9, 0.72);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  z-index: 50;
+
+  animation: fadeIn 0.15s ease;
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80%;
+
+  background: #10261e;
+  border: 1px solid #28483b;
+  border-radius: 16px;
+
+  padding: 18px;
+
+  overflow-y: auto;
+}

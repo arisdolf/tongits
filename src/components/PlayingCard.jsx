@@ -1,5 +1,5 @@
 import { getCardRank, getCardSuit, isRedSuit } from "../utils/cardUtils"
-
+import "../styles/PlayingCard.css"
 /*
  * PLAYING CARD FACE
  * Real card look: corner rank+suit (top-left, mirrored bottom-right)

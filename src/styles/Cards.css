@@ -1,0 +1,55 @@
+/* =========================
+   CARDS — shared card slot sizing
+   Used by: PlayerHand (SortableCard) and OpponentPanel
+========================= */
+
+.cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 100px;
+}
+
+.card {
+  width: 65px;
+  height: 90px;
+
+  border-radius: 9px;
+
+  padding: 0;
+  border: none;
+  background: transparent;
+
+  position: relative;
+
+  user-select: none;
+  -webkit-user-select: none;
+
+  touch-action: none;
+
+  will-change: transform;
+}
+
+@media (min-width: 768px) {
+  .card {
+    width: 75px;
+    height: 105px;
+  }
+}
+
+@media (max-width: 600px) {
+  .card {
+    width: 48px;
+    height: 68px;
+    margin: 2px;
+  }
+}
+
+@media (max-width: 380px) {
+  .card {
+    width: 40px;
+    height: 57px;
+    margin: 1.5px;
+  }
+}

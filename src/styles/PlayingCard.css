@@ -1,0 +1,95 @@
+/* =========================
+   PLAYING CARD FACE
+   Used by: PlayingCard.jsx
+========================= */
+
+.playing-card {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(160deg, #ffffff, #f3f3f0);
+  border: 1px solid #d6d6d2;
+  border-radius: 9px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  padding: 4px 5px;
+
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+
+  user-select: none;
+}
+
+.playing-card.red-suit {
+  color: #b3242c;
+}
+
+.playing-card.black-suit {
+  color: #1a1a1a;
+}
+
+.pc-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.pc-corner-bottom {
+  align-self: flex-end;
+  transform: rotate(180deg);
+}
+
+.pc-rank {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.pc-suit {
+  font-size: 11px;
+}
+
+.pc-center-suit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  opacity: 0.92;
+}
+
+/* small variant */
+
+.playing-card.small .pc-rank {
+  font-size: 9px;
+}
+
+.playing-card.small .pc-suit {
+  font-size: 8px;
+}
+
+.playing-card.small .pc-center-suit {
+  font-size: 17px;
+}
+
+.playing-card.small {
+  padding: 2px 3px;
+  border-radius: 6px;
+}
+
+/* RESPONSIVE */
+
+@media (min-width: 768px) {
+  .pc-rank        { font-size: 15px; }
+  .pc-suit        { font-size: 12px; }
+  .pc-center-suit { font-size: 30px; }
+}
+
+@media (max-width: 600px) {
+  .pc-rank        { font-size: 10px; }
+  .pc-suit        { font-size: 9px; }
+  .pc-center-suit { font-size: 18px; }
+}

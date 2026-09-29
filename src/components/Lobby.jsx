@@ -3,7 +3,7 @@
  * The create-room / join-room screen, shown before
  * a roomCode exists.
  */
-
+import "../styles/Lobby.css"
 function Lobby({
   inputCode,
   setInputCode,

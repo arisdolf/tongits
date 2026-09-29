@@ -1,0 +1,20 @@
+/* =========================
+   OPPONENT PANEL
+   Used by: OpponentPanel.jsx
+   (.player / .player-name are also used by PlayerHand)
+========================= */
+
+.player {
+  text-align: center;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.opponent-count {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #a9c0b5;
+}

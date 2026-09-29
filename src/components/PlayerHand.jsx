@@ -4,7 +4,9 @@ import {
 } from "@dnd-kit/sortable"
 
 import SortableCard from "./SortableCard"
-
+import "../styles/Cards.css"
+import "../styles/PlayerHand.css"
+import "../styles/SortDropdown.css"
 function PlayerHand({
   myHand,
   selectedCards,

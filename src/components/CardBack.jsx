@@ -2,7 +2,7 @@
  * CARD BACK
  * Shared back design for the deck and the opponent's hand.
  */
-
+import "../styles/CardBack.css"
 function CardBack({ className = "" }) {
   return (
     <div className={"card-back " + className}>

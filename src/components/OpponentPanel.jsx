@@ -1,4 +1,6 @@
 import CardBack from "./CardBack"
+import "../styles/Cards.css"
+import "../styles/OpponentPanel.css"
 
 function OpponentPanel({ opponentCount }) {
 

@@ -1,0 +1,79 @@
+/* =========================
+   SORT DROPDOWN
+   Used by: PlayerHand.jsx (sort menu)
+========================= */
+
+.dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: transparent;
+}
+
+.sort-dropdown {
+  position: absolute;
+  top: 0;
+  right: 6px;
+  z-index: 45;
+  text-align: left;
+}
+
+.sort-toggle {
+  background: transparent;
+  border: 1px solid #3b5d4e;
+  color: #cfe3d8;
+  padding: 8px 14px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  border-radius: 10px;
+}
+
+.sort-toggle:hover:not(:disabled) {
+  border-color: #d8b45a;
+  color: #d8b45a;
+  transform: none;
+  filter: none;
+}
+
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+
+  background: #10261e;
+  border: 1px solid #28483b;
+  border-radius: 10px;
+  padding: 6px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.12s ease;
+}
+
+.sort-menu-item {
+  background: transparent;
+  border: none;
+  color: #cfe3d8;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+.sort-menu-item:hover {
+  background: rgba(216, 180, 90, 0.15);
+  color: #d8b45a;
+  transform: none;
+  filter: none;
+}
+
+@media (max-width: 600px) {
+  .sort-toggle {
+    font-size: 10px;
+    padding: 7px 10px;
+  }
+}

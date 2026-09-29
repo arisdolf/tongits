@@ -10,7 +10,7 @@ import PlayerHand from "./components/PlayerHand"
 import DiscardHistoryModal from "./components/DiscardHistoryModal"
 import WinModal from "./components/winModal"
 
-import "./index.css"
+import "./styles/App.css"
 
 
 function App() {
