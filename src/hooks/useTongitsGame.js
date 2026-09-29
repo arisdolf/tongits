@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { database, auth } from "../firebase"
 import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp } from "firebase/database"
+import { onAuthStateChanged } from "firebase/auth"
 import {
   getCardValue,
   getCardSuit,
@@ -51,7 +52,13 @@ const hasLoadedRoomRef = useRef(false)
 useEffect(() => {
   hasLoadedRoomRef.current = false
 }, [roomCode])
-  const user = auth.currentUser
+  const [user, setUser] = useState(null)
+
+useEffect(() => {
+  return onAuthStateChanged(auth, currentUser => {
+    setUser(currentUser)
+  })
+}, [])
     /*
    * OPPONENT HAND COUNT
    */
@@ -142,6 +149,7 @@ useEffect(() => {
 
   const unsubscribe = onValue(handRef, snapshot => {
     const hand = snapshot.val()
+
     if (Array.isArray(hand)) {
       setMyHand(hand)
     }
@@ -679,31 +687,7 @@ async function endGameByLowestCount() {
  * Reads BOTH hands directly from Firebase (not just local
  * state) since we only track our own hand locally.
  */
-async function endGameByLowestCount() {
 
-  const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
-  const hands = handsSnapshot.val() || {}
-
-  const p1Value = getHandValue(hands[room.player1] || [])
-  const p2Value = getHandValue(hands[room.player2] || [])
-
-  let winner
-
-  if (p1Value < p2Value) {
-    winner = room.player1
-  } else if (p2Value < p1Value) {
-    winner = room.player2
-  } else {
-    winner = "tie"
-  }
-
-  await update(ref(database, "rooms/" + roomCode), {
-    "game/status": "finished",
-    "game/winner": winner,
-    "game/winReason": "lowestCount"
-  })
-
-}
 
 async function rematch() {
 
