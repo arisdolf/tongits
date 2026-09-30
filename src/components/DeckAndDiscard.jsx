@@ -2,7 +2,7 @@ import CardBack from "./CardBack"
 import PlayingCard from "./PlayingCard"
 import DiscardDropZone from "./DiscardDropZone"
 import "../styles/DeckAndDiscard.css"
-function DeckAndDiscard({
+function ndDiscard({
   deckCount,
   drawing,
   onDraw,
@@ -10,7 +10,7 @@ function DeckAndDiscard({
   discardPile,
   onViewAll
 }) {
-
+  
   return (
     <div className="middle">
 

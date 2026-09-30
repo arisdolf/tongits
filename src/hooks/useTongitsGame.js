@@ -48,7 +48,7 @@ export function useTongitsGame() {
   const [newlyDrawnCard, setNewlyDrawnCard] = useState(null)
 const [presence, setPresence] = useState({})
 const hasLoadedRoomRef = useRef(false)
-
+const hadPlayer2Ref = useRef(false)
 
 
 useEffect(() => {
@@ -127,11 +127,13 @@ useEffect(() => {
       setGame(data.game)
     }
 
-    if (data.player2) {
-      setMessage("Player 2 joined!")
-    } else {
-      setMessage("Waiting for Player 2...")
-    }
+    if (!data.player2) {
+  hadPlayer2Ref.current = false
+  setMessage("Waiting for Player 2...")
+} else if (!hadPlayer2Ref.current) {
+  hadPlayer2Ref.current = true
+  setMessage("Player 2 joined!")
+}
 
   })
 

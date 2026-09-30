@@ -67,7 +67,7 @@ function App() {
         >
 
           <DeckAndDiscard
-            deckCount={g.game ? g.game.deck.length : 0}
+            deckCount={g.game?.deck?.length || 0}
             drawing={g.drawing}
             onDraw={g.drawCard}
             canDraw={

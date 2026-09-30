@@ -78,9 +78,7 @@ function PlayerHand({
       <div className="player-name">
         You
       </div>
-        <p style={{ color: "yellow" }}>
-  MY HAND: {myHand.join(", ")}
-</p>
+      
       <SortableContext
         items={myHand}
         strategy={horizontalListSortingStrategy}
@@ -90,8 +88,8 @@ function PlayerHand({
 
           {myHand.map((card, index) => (
   <SortableCard
-    key={card + "-" + index}
-    id={card + "-" + index}
+    key={card}
+    id={card}
     card={card}
     index={index}
     selected={selectedCards.includes(card)}
