@@ -139,24 +139,39 @@ useEffect(() => {
  * MY HAND
  */
 useEffect(() => {
-
   if (!roomCode || !user) return
 
-  const handRef = ref(
-    database,
-    "rooms/" + roomCode + "/hands/" + user.uid
+  console.log("AUTH USER:", auth.currentUser)
+  console.log("AUTH UID:", auth.currentUser?.uid)
+  console.log("ROOM CODE:", roomCode)
+
+  const handPath =
+    "rooms/" + roomCode + "/hands/" + auth.currentUser?.uid
+
+  console.log("HAND PATH:", handPath)
+
+  const handRef = ref(database, handPath)
+
+  const unsubscribe = onValue(
+    handRef,
+    snapshot => {
+      console.log("HAND SNAPSHOT EXISTS:", snapshot.exists())
+      console.log("MY HAND FROM FIREBASE:", snapshot.val())
+
+      const hand = snapshot.val()
+
+      if (Array.isArray(hand)) {
+        setMyHand(hand)
+      } else {
+        setMyHand([])
+      }
+    },
+    error => {
+      console.error("HAND LISTENER ERROR:", error)
+    }
   )
 
-  const unsubscribe = onValue(handRef, snapshot => {
-    const hand = snapshot.val()
-
-    if (Array.isArray(hand)) {
-      setMyHand(hand)
-    }
-  })
-
   return () => unsubscribe()
-
 }, [roomCode, user])
 
  /*
@@ -380,7 +395,10 @@ async function leaveRoom() {
    * START GAME
    */
   async function startGame(code, player1, player2) {
-
+    console.log("START GAME CALLED")
+console.log("CODE:", code)
+console.log("PLAYER 1:", player1)
+console.log("PLAYER 2:", player2)
     const deck = createDeck()
     shuffleDeck(deck)
 
@@ -412,6 +430,7 @@ async function leaveRoom() {
     await set(ref(database, "rooms/" + code + "/game"), gameData)
     await set(ref(database, "rooms/" + code + "/hands/" + player1), player1Hand)
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
+    console.log("HANDS SAVED")
 
   }
 
