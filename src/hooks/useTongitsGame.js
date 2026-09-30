@@ -33,7 +33,7 @@ import { arrayMove } from "@dnd-kit/sortable"
  */
 
 export function useTongitsGame() {
-
+  const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
   const [roomCode, setRoomCode] = useState("")
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
@@ -48,6 +48,14 @@ export function useTongitsGame() {
   const [newlyDrawnCard, setNewlyDrawnCard] = useState(null)
 const [presence, setPresence] = useState({})
 const hasLoadedRoomRef = useRef(false)
+
+
+
+useEffect(() => {
+  if (roomCode) localStorage.setItem("roomCode", roomCode)
+  else localStorage.removeItem("roomCode")
+}, [roomCode])
+
 
 useEffect(() => {
   hasLoadedRoomRef.current = false
@@ -139,24 +147,32 @@ useEffect(() => {
  * MY HAND
  */
 useEffect(() => {
-
   if (!roomCode || !user) return
 
-  const handRef = ref(
-    database,
-    "rooms/" + roomCode + "/hands/" + user.uid
+  const handRef = ref(database, "rooms/" + roomCode + "/hands/" + user.uid)
+
+  const unsubscribe = onValue(
+    handRef,
+    snapshot => {
+      const raw = snapshot.val()
+      console.log("HAND SNAPSHOT", user.uid, raw)
+
+      if (Array.isArray(raw)) {
+        setMyHand(raw)
+      } else if (raw && typeof raw === "object") {
+        // Firebase returns an object instead of an array if keys have gaps
+        setMyHand(Object.values(raw))
+      } else {
+        setMyHand([])
+      }
+    },
+    error => {
+      console.error("HAND LISTENER ERROR", error)
+      setMessage("Can't read hand: " + error.message)
+    }
   )
 
-  const unsubscribe = onValue(handRef, snapshot => {
-    const hand = snapshot.val()
-
-    if (Array.isArray(hand)) {
-      setMyHand(hand)
-    }
-  })
-
   return () => unsubscribe()
-
 }, [roomCode, user])
 
  /*
