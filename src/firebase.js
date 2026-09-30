@@ -16,6 +16,7 @@ const firebaseConfig = {
     messagingSenderId: "298419255302",
     appId: "1:298419255302:web:13403f38cf05f073c7eb87",
     measurementId: "G-L4KKTS21J1"
+    
 };
 
 // Initialize Firebase
@@ -23,5 +24,6 @@ const app = initializeApp(firebaseConfig)
 
 export const database = getDatabase(app)
 export const auth = getAuth(app)
-
+console.log("DATABASE URL:", database.app.options.databaseURL)
+console.log("PROJECT ID:", database.app.options.projectId)
 signInAnonymously(auth)
