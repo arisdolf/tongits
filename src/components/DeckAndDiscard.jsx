@@ -2,7 +2,7 @@ import CardBack from "./CardBack"
 import PlayingCard from "./PlayingCard"
 import DiscardDropZone from "./DiscardDropZone"
 import "../styles/DeckAndDiscard.css"
-function ndDiscard({
+function DeckAndDiscard({
   deckCount,
   drawing,
   onDraw,
