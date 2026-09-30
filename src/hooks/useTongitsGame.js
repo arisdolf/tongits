@@ -34,7 +34,7 @@ import { arrayMove } from "@dnd-kit/sortable"
 
 export function useTongitsGame() {
   const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
-  const [roomCode, setRoomCode] = useState("")
+ 
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
   const [room, setRoom] = useState(null)
