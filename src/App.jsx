@@ -8,7 +8,7 @@ import BahayArea from "./components/BahayArea"
 import DeckAndDiscard from "./components/DeckAndDiscard"
 import PlayerHand from "./components/PlayerHand"
 import DiscardHistoryModal from "./components/DiscardHistoryModal"
-import WinModal from "./components/winModal"
+import WinModal from "./components/WinModal"
 
 import "./styles/App.css"
 
