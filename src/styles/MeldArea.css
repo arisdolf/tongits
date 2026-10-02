@@ -1,9 +1,9 @@
 /* =========================
-   BAHAY AREA
-   Used by: BahayArea.jsx
+  meld AREA
+   Used by: meldArea.jsx
 ========================= */
 
-.bahay-area {
+.meld-area {
   width: 100%;
   margin: 25px 0;
   padding: 15px;
@@ -11,26 +11,26 @@
   background: rgba(0, 0, 0, 0.25);
 }
 
-.bahay-title {
+.meld-title {
   text-align: center;
   font-weight: bold;
   margin-bottom: 15px;
   letter-spacing: 2px;
 }
 
-.bahay-list {
+.meld-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 15px;
 }
 
-.empty-bahay {
+.empty-meld {
   opacity: 0.6;
   padding: 20px;
 }
 
-.bahay {
+.meld {
   min-width: 180px;
   padding: 12px;
   border-radius: 12px;
@@ -38,51 +38,35 @@
   border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
-.my-bahay {
-  border-color: rgba(80, 200, 120, 0.7);
-}
+.my-meld { border-color: rgba(80, 200, 120, 0.7); }
+.opponent-meld { border-color: rgba(255, 120, 120, 0.7); }
 
-.opponent-bahay {
-  border-color: rgba(255, 120, 120, 0.7);
-}
-
-.bahay-header {
+.meld-header {
   text-align: center;
   font-size: 12px;
   margin-bottom: 8px;
   opacity: 0.8;
 }
 
-.bahay-cards {
+.meld-cards {
   display: flex;
   justify-content: center;
   gap: 4px;
   flex-wrap: wrap;
 }
 
-.bahay-card {
+.meld-card {
   width: 45px;
   height: 63px;
   min-width: 45px;
   position: relative;
+  animation: meldCardIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes bahayCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(-14px) scale(0.7) rotate(-8deg);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotate(0);
-  }
+@keyframes meldCardIn {
+  from { opacity: 0; transform: translateY(-14px) scale(0.7) rotate(-8deg); }
+  to   { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
 }
-
-.bahay-card {
-  animation: bahayCardIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* ADD CARD BUTTON */
 
 .layoff-button {
   width: 100%;
@@ -91,15 +75,10 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-
   background: rgba(255, 255, 255, 0.12) !important;
   color: #cfe3d8 !important;
   font-weight: bold;
-
-  transition:
-    box-shadow 0.2s ease,
-    background 0.2s ease,
-    color 0.2s ease;
+  transition: box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .layoff-button:disabled {
@@ -107,7 +86,6 @@
   cursor: not-allowed;
 }
 
-/* Lights up gold only when the selected card fits this bahay */
 .layoff-button.can-add {
   background: #d8b45a !important;
   color: #172016 !important;
@@ -121,28 +99,12 @@
   50%      { box-shadow: 0 0 18px rgba(216, 180, 90, 0.95); }
 }
 
-/* RESPONSIVE */
-
 @media (max-width: 600px) {
-  .bahay-area {
-    margin: 15px 0;
-    padding: 10px;
-  }
-
-  .bahay {
-    min-width: 140px;
-    padding: 8px;
-  }
-
-  .bahay-card {
-    width: 34px;
-    height: 48px;
-    min-width: 34px;
-  }
+  .meld-area { margin: 15px 0; padding: 10px; }
+  .meld { min-width: 140px; padding: 8px; }
+  .meld-card { width: 34px; height: 48px; min-width: 34px; }
 }
 
 @media (max-width: 380px) {
-  .bahay {
-    min-width: 120px;
-  }
+  .meld { min-width: 120px; }
 }

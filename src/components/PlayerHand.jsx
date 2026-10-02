@@ -18,7 +18,7 @@ function PlayerHand({
   onSortByRank,
   isMyTurn,
   phase,
-  onBahay,
+  onMeld,
   onDiscard,
   onClearSelection,
   starterName,
@@ -102,17 +102,17 @@ function PlayerHand({
 
       </SortableContext>
 
-      <div className="hand-actions">
+            <div className="hand-actions">
 
         <button
-          onClick={onBahay}
+          onClick={onMeld}
           disabled={
             !isMyTurn ||
             phase !== "discard" ||
             selectedCards.length < 3
           }
         >
-          BAHAY
+          MELD
         </button>
 
         <button
@@ -134,8 +134,8 @@ function PlayerHand({
       <p className="card-help">
         {isMyTurn
           ? phase === "draw"
-            ? "Draw one card, then create or add to a bahay, then discard."
-            : "Select cards to create a bahay, add to a bahay, or discard one card."
+            ? "Draw a card or take the discard (if it makes a meld), then meld / add to a meld, then discard."
+            : "Select cards to create a meld, add to a meld, or discard one card (a card that fits a meld can't be discarded)."
           : "Wait for your turn"}
       </p>
 

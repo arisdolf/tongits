@@ -4,14 +4,13 @@ import { useTongitsGame } from "./hooks/useTongitsGame"
 
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
-import BahayArea from "./components/BahayArea"
+import MeldArea from "./components/MeldArea"
 import DeckAndDiscard from "./components/DeckAndDiscard"
 import PlayerHand from "./components/PlayerHand"
 import DiscardHistoryModal from "./components/DiscardHistoryModal"
 import WinModal from "./components/WinModal"
 
 import "./styles/App.css"
-
 
 function App() {
 
@@ -50,14 +49,14 @@ function App() {
           </div>
         )}
 
-
-        <BahayArea
-          bahayList={g.game?.bahay || []}
+        <MeldArea
+          meldList={g.game?.melds || []}
           isMyTurn={g.isMyTurn}
           phase={g.game?.phase}
           selectedCards={g.selectedCards}
           currentUserId={g.user?.uid}
-          onAddToBahay={g.addToBahay}
+          mustMeld={g.game?.mustMeld}
+          onAddToMeld={g.addToMeld}
         />
 
         <DndContext
@@ -77,19 +76,27 @@ function App() {
             }
             discardPile={g.discardPile}
             onViewAll={() => g.setShowDiscardHistory(true)}
+            canTakeDiscard={g.canTakeDiscard}
+            onTakeDiscard={g.takeDiscard}
           />
 
           <div className="turn-message">
             {g.isMyTurn
               ? g.game?.phase === "draw"
-                ? "YOUR TURN — DRAW"
-                : "YOUR TURN — PLAY / DISCARD"
+                ? "YOUR TURN — DRAW OR TAKE DISCARD"
+                : "YOUR TURN — MELD / DISCARD"
               : "OPPONENT'S TURN"}
           </div>
 
           {g.isMyTurn && g.game?.phase === "draw" && (
             <div className="turn-warning">
-              ⚠ Draw a card first — you can't bahay or discard yet.
+              ⚠ Draw (or take a usable discard) first — you can't meld or discard yet.
+            </div>
+          )}
+
+          {g.isMyTurn && g.game?.mustMeld && (
+            <div className="turn-warning">
+              ⚠ You took {g.game.mustMeld} — use it in a meld or add it to one before discarding.
             </div>
           )}
 
@@ -104,7 +111,7 @@ function App() {
             onSortByRank={g.sortHandByRank}
             isMyTurn={g.isMyTurn}
             phase={g.game?.phase}
-            onBahay={g.createBahay}
+            onMeld={g.createMeld}
             onDiscard={g.discardSelected}
             onClearSelection={() => g.setSelectedCards([])}
             starterName={g.starterName}
@@ -113,9 +120,8 @@ function App() {
 
         </DndContext>
 
-        <p className="message">
-          {g.message}
-        </p>
+        <p className="message">{g.message}</p>
+
         <WinModal
           game={g.game}
           room={g.room}
@@ -132,7 +138,6 @@ function App() {
       </div>
     </div>
   )
-
 }
 
 export default App

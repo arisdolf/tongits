@@ -8,8 +8,10 @@ import {
   getHandValue,
   createDeck,
   shuffleDeck,
-  isValidBahay,
-  canAddToBahay,
+  isValidMeld,
+  canAddToMeld,
+  canCardGoOnAnyMeld,
+  canFormMeldWithCard,
   suitOrder
 } from "../utils/cardUtils"
 
@@ -22,19 +24,15 @@ import {
 
 import { arrayMove } from "@dnd-kit/sortable"
 
-
-
 /*
  * useTongitsGame
  * Every piece of state, every Firebase listener, and every
- * game action lives in this one hook. Components never talk
- * to Firebase directly — they just receive data + callbacks
- * from whatever calls this hook (App.jsx).
+ * game action lives in this one hook.
  */
 
 export function useTongitsGame() {
   const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
- 
+
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
   const [room, setRoom] = useState(null)
@@ -46,183 +44,158 @@ export function useTongitsGame() {
   const [showDiscardHistory, setShowDiscardHistory] = useState(false)
   const [sortMenuOpen, setSortMenuOpen] = useState(false)
   const [newlyDrawnCard, setNewlyDrawnCard] = useState(null)
-const [presence, setPresence] = useState({})
-const hasLoadedRoomRef = useRef(false)
-const hadPlayer2Ref = useRef(false)
+  const [presence, setPresence] = useState({})
+  const hasLoadedRoomRef = useRef(false)
+  const hadPlayer2Ref = useRef(false)
 
+  useEffect(() => {
+    if (roomCode) localStorage.setItem("roomCode", roomCode)
+    else localStorage.removeItem("roomCode")
+  }, [roomCode])
 
-useEffect(() => {
-  if (roomCode) localStorage.setItem("roomCode", roomCode)
-  else localStorage.removeItem("roomCode")
-}, [roomCode])
+  useEffect(() => {
+    hasLoadedRoomRef.current = false
+  }, [roomCode])
 
-
-useEffect(() => {
-  hasLoadedRoomRef.current = false
-}, [roomCode])
   const [user, setUser] = useState(null)
 
-useEffect(() => {
-  return onAuthStateChanged(auth, currentUser => {
-    setUser(currentUser)
-  })
-}, [])
-    /*
-   * OPPONENT HAND COUNT
-   */
+  useEffect(() => {
+    return onAuthStateChanged(auth, currentUser => {
+      setUser(currentUser)
+    })
+  }, [])
+
   const opponentUid =
     room && user
       ? room.player1 === user.uid
         ? room.player2
         : room.player1
       : null
-      
+
   const sensors = useSensors(
-
-    
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 4 }
-    }),
-
-    // Distance-based (not delay-based) so a touch drag
-    // starts the instant a finger moves, with no hold wait.
-    useSensor(TouchSensor, {
-      activationConstraint: { distance: 4 }
-    })
-
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 4 } })
   )
-
 
   /*
    * ROOM LISTENER
    */
   useEffect(() => {
 
-  if (!roomCode) return
+    if (!roomCode) return
 
-  const roomRef = ref(database, "rooms/" + roomCode)
+    const roomRef = ref(database, "rooms/" + roomCode)
 
-  const unsubscribe = onValue(roomRef, snapshot => {
+    const unsubscribe = onValue(roomRef, snapshot => {
 
-    const data = snapshot.val()
+      const data = snapshot.val()
 
-    if (!data) {
-      // Room existed before and is now gone — the other
-      // player left after we'd already disconnected once too.
-      if (hasLoadedRoomRef.current) {
-        setMessage("Room closed")
-        setRoomCode("")
-        setRoom(null)
-        setGame(null)
-        setPresence({})
+      if (!data) {
+        if (hasLoadedRoomRef.current) {
+          setMessage("Room closed")
+          setRoomCode("")
+          setRoom(null)
+          setGame(null)
+          setPresence({})
+        }
+        return
       }
-      return
-    }
 
-    hasLoadedRoomRef.current = true
-    setRoom(data)
-    setPresence(data.presence || {})
+      hasLoadedRoomRef.current = true
+      setRoom(data)
+      setPresence(data.presence || {})
 
-    if (data.game) {
-      setGame(data.game)
-    }
+      if (data.game) {
+        setGame(data.game)
+      }
 
-    if (!data.player2) {
-  hadPlayer2Ref.current = false
-  setMessage("Waiting for Player 2...")
-} else if (!hadPlayer2Ref.current) {
-  hadPlayer2Ref.current = true
-  setMessage("Player 2 joined!")
-}
+      if (!data.player2) {
+        hadPlayer2Ref.current = false
+        setMessage("Waiting for Player 2...")
+      } else if (!hadPlayer2Ref.current) {
+        hadPlayer2Ref.current = true
+        setMessage("Player 2 joined!")
+      }
 
-  })
+    })
 
-  return () => unsubscribe()
+    return () => unsubscribe()
 
-}, [roomCode])
-
+  }, [roomCode])
 
   /*
    * MY HAND
    */
-  /*
- * MY HAND
- */
-useEffect(() => {
-  if (!roomCode || !user) return
+  useEffect(() => {
+    if (!roomCode || !user) return
 
-  const handRef = ref(database, "rooms/" + roomCode + "/hands/" + user.uid)
+    const handRef = ref(database, "rooms/" + roomCode + "/hands/" + user.uid)
 
-  const unsubscribe = onValue(
-    handRef,
-    snapshot => {
-      const raw = snapshot.val()
-      console.log("HAND SNAPSHOT", user.uid, raw)
+    const unsubscribe = onValue(
+      handRef,
+      snapshot => {
+        const raw = snapshot.val()
 
-      if (Array.isArray(raw)) {
-        setMyHand(raw)
-      } else if (raw && typeof raw === "object") {
-        // Firebase returns an object instead of an array if keys have gaps
-        setMyHand(Object.values(raw))
-      } else {
-        setMyHand([])
+        if (Array.isArray(raw)) {
+          setMyHand(raw)
+        } else if (raw && typeof raw === "object") {
+          setMyHand(Object.values(raw))
+        } else {
+          setMyHand([])
+        }
+      },
+      error => {
+        console.error("HAND LISTENER ERROR", error)
+        setMessage("Can't read hand: " + error.message)
       }
-    },
-    error => {
-      console.error("HAND LISTENER ERROR", error)
-      setMessage("Can't read hand: " + error.message)
+    )
+
+    return () => unsubscribe()
+  }, [roomCode, user])
+
+  /*
+   * PRESENCE — MARK MYSELF ONLINE
+   */
+  useEffect(() => {
+
+    if (!roomCode || !user) return
+
+    const myPresenceRef = ref(
+      database,
+      "rooms/" + roomCode + "/presence/" + user.uid
+    )
+
+    set(myPresenceRef, { online: true, lastSeen: serverTimestamp() })
+
+    onDisconnect(myPresenceRef).update({
+      online: false,
+      lastSeen: serverTimestamp()
+    })
+
+  }, [roomCode, user])
+
+  /*
+   * PRESENCE — ESCALATE OR STAND DOWN
+   */
+  useEffect(() => {
+
+    if (!roomCode || !user || !opponentUid) return
+
+    const opponentOnline = presence[opponentUid]?.online
+    const roomRef = ref(database, "rooms/" + roomCode)
+
+    if (opponentOnline === false) {
+      onDisconnect(roomRef).remove()
+    } else if (opponentOnline === true) {
+      onDisconnect(roomRef).cancel()
     }
-  )
 
-  return () => unsubscribe()
-}, [roomCode, user])
+  }, [roomCode, user, opponentUid, presence[opponentUid]?.online])
 
- /*
- * PRESENCE — MARK MYSELF ONLINE
- * Registers what Firebase should do to MY presence node
- * if my connection drops with no warning.
- */
-useEffect(() => {
-
-  if (!roomCode || !user) return
-
-  const myPresenceRef = ref(
-    database,
-    "rooms/" + roomCode + "/presence/" + user.uid
-  )
-
-  set(myPresenceRef, { online: true, lastSeen: serverTimestamp() })
-
-  onDisconnect(myPresenceRef).update({
-    online: false,
-    lastSeen: serverTimestamp()
-  })
-
-}, [roomCode, user])
-
-
-/*
- * PRESENCE — ESCALATE OR STAND DOWN
- * If my opponent just went offline, arm a second disconnect
- * handler: if I ALSO drop next, take the whole room with me.
- * If they come back, disarm it.
- */
-useEffect(() => {
-
-  if (!roomCode || !user || !opponentUid) return
-
-  const opponentOnline = presence[opponentUid]?.online
-  const roomRef = ref(database, "rooms/" + roomCode)
-
-  if (opponentOnline === false) {
-    onDisconnect(roomRef).remove()
-  } else if (opponentOnline === true) {
-    onDisconnect(roomRef).cancel()
-  }
-
-}, [roomCode, user, opponentUid, presence[opponentUid]?.online])
-
-    useEffect(() => {
+  /*
+   * OPPONENT HAND COUNT
+   */
+  useEffect(() => {
 
     if (!roomCode || !opponentUid) return
 
@@ -244,74 +217,54 @@ useEffect(() => {
 
   }, [roomCode, opponentUid])
 
-  
   /*
    * CLEAR THE "NEW CARD" INDICATOR
-   * once it's no longer in hand, or once
-   * it's no longer this player's turn
    */
   useEffect(() => {
-
     if (newlyDrawnCard && !myHand.includes(newlyDrawnCard)) {
       setNewlyDrawnCard(null)
     }
-
   }, [myHand, newlyDrawnCard])
 
   useEffect(() => {
-
     if (game && user && game.currentTurn !== user.uid) {
       setNewlyDrawnCard(null)
     }
-
   }, [game && game.currentTurn, user])
 
-
-
-
-
-
   /*
- * LEAVE ROOM
- * Explicit exit — used for the Leave button, and also
- * covers "finish game" until you add a real win screen.
- */
-async function leaveRoom() {
+   * LEAVE ROOM
+   */
+  async function leaveRoom() {
 
-  if (!roomCode || !user) return
+    if (!roomCode || !user) return
 
-  const myPresenceRef = ref(
-    database,
-    "rooms/" + roomCode + "/presence/" + user.uid
-  )
-  const roomRef = ref(database, "rooms/" + roomCode)
+    const myPresenceRef = ref(
+      database,
+      "rooms/" + roomCode + "/presence/" + user.uid
+    )
+    const roomRef = ref(database, "rooms/" + roomCode)
 
-  // I'm leaving on purpose — cancel the automatic handlers
-  await onDisconnect(myPresenceRef).cancel()
-  await onDisconnect(roomRef).cancel()
+    await onDisconnect(myPresenceRef).cancel()
+    await onDisconnect(roomRef).cancel()
 
-  const opponentOnline = presence[opponentUid]?.online
+    const opponentOnline = presence[opponentUid]?.online
 
-  if (!opponentUid || opponentOnline !== true) {
-    // Opponent already gone, or never existed — nothing to keep
-    await remove(roomRef)
-  } else {
-    // Opponent still here — just step out, leave their game intact
-    await remove(myPresenceRef)
+    if (!opponentUid || opponentOnline !== true) {
+      await remove(roomRef)
+    } else {
+      await remove(myPresenceRef)
+    }
+
+    setRoomCode("")
+    setRoom(null)
+    setGame(null)
+    setMyHand([])
+    setSelectedCards([])
+    setPresence({})
+    setMessage("You left the room")
+
   }
-
-  setRoomCode("")
-  setRoom(null)
-  setGame(null)
-  setMyHand([])
-  setSelectedCards([])
-  setPresence({})
-  setMessage("You left the room")
-
-}
-
-
-
 
   /*
    * CREATE ROOM
@@ -341,7 +294,6 @@ async function leaveRoom() {
     }
 
   }
-
 
   /*
    * JOIN ROOM
@@ -393,7 +345,6 @@ async function leaveRoom() {
 
   }
 
-
   /*
    * START GAME
    */
@@ -424,7 +375,9 @@ async function leaveRoom() {
       hasDrawn: false,
       status: "playing",
       nextStarter: null,
-      bahay: []
+      melds: [],
+      mustMeld: null,
+      lastDiscarder: null
     }
 
     await set(ref(database, "rooms/" + code + "/game"), gameData)
@@ -433,14 +386,24 @@ async function leaveRoom() {
 
   }
 
+  /*
+   * Shared: if the hand is now empty, the player goes out and wins.
+   */
+  function applyWinIfEmpty(updates, newHand) {
+    if (newHand.length === 0) {
+      updates["game/status"] = "finished"
+      updates["game/winner"] = user.uid
+      updates["game/winReason"] = "emptyHand"
+    }
+  }
 
   /*
-   * CREATE BAHAY
+   * CREATE MELD
    */
-  async function createBahay() {
-    if (game.status === "finished") return
+  async function createMeld() {
 
     if (!game || !user) return
+    if (game.status === "finished") return
 
     if (game.currentTurn !== user.uid) {
       setMessage("It's not your turn")
@@ -457,38 +420,48 @@ async function leaveRoom() {
       return
     }
 
-    if (!isValidBahay(selectedCards)) {
-      setMessage("Those cards do not form a valid bahay")
+    if (!isValidMeld(selectedCards)) {
+      setMessage("Those cards do not form a valid meld")
       return
     }
 
-    const newBahay = {
+    // A card taken from the discard pile MUST be used in the meld
+    if (game.mustMeld && !selectedCards.includes(game.mustMeld)) {
+      setMessage("Your meld must include the card you took: " + game.mustMeld)
+      return
+    }
+
+    const newMeld = {
       id: Date.now().toString(),
       owner: user.uid,
       cards: [...selectedCards]
     }
 
     const newHand = myHand.filter(card => !selectedCards.includes(card))
-    const currentBahay = game.bahay || []
-    const updatedBahay = [...currentBahay, newBahay]
+    const updatedMelds = [...(game.melds || []), newMeld]
 
-    await update(ref(database, "rooms/" + roomCode), {
+    const updates = {
       ["hands/" + user.uid]: newHand,
-      "game/bahay": updatedBahay
-    })
+      "game/melds": updatedMelds,
+      "game/mustMeld": null
+    }
+
+    applyWinIfEmpty(updates, newHand)
+
+    await update(ref(database, "rooms/" + roomCode), updates)
 
     setSelectedCards([])
-    setMessage("Bahay created!")
+    setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
 
   }
 
-
   /*
-   * ADD CARD TO BAHAY
+   * ADD CARD TO MELD
    */
-  async function addToBahay(bahayId) {
-    if (game.status === "finished") return
+  async function addToMeld(meldId) {
+
     if (!game || !user) return
+    if (game.status === "finished") return
 
     if (game.currentTurn !== user.uid) {
       setMessage("It's not your turn")
@@ -506,45 +479,56 @@ async function leaveRoom() {
     }
 
     const card = selectedCards[0]
-    const bahay = (game.bahay || []).find(item => item.id === bahayId)
 
-    if (!bahay) {
-      setMessage("Bahay not found")
+    if (game.mustMeld && card !== game.mustMeld) {
+      setMessage("Use the card you took first: " + game.mustMeld)
       return
     }
 
-    if (!canAddToBahay(bahay, card)) {
-      setMessage("That card cannot be added to this bahay")
+    const meld = (game.melds || []).find(item => item.id === meldId)
+
+    if (!meld) {
+      setMessage("Meld not found")
       return
     }
 
-    const updatedBahay = (game.bahay || []).map(item => {
-      if (item.id === bahayId) {
-        return { ...item, cards: [...item.cards, card] }
-      }
-      return item
-    })
+    if (!canAddToMeld(meld, card)) {
+      setMessage("That card cannot be added to this meld")
+      return
+    }
+
+    const updatedMelds = (game.melds || []).map(item =>
+      item.id === meldId
+        ? { ...item, cards: [...item.cards, card] }
+        : item
+    )
 
     const newHand = myHand.filter(item => item !== card)
 
-    await update(ref(database, "rooms/" + roomCode), {
+    const updates = {
       ["hands/" + user.uid]: newHand,
-      "game/bahay": updatedBahay
-    })
+      "game/melds": updatedMelds
+    }
+
+    if (game.mustMeld === card) {
+      updates["game/mustMeld"] = null
+    }
+
+    applyWinIfEmpty(updates, newHand)
+
+    await update(ref(database, "rooms/" + roomCode), updates)
 
     setSelectedCards([])
-    setMessage("Card added to bahay!")
+    setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card added to meld!")
 
   }
-
 
   /*
    * SELECT CARD
    */
   function toggleCard(card) {
-    if (game.status === "finished") return
     if (!game || !user) return
-
+    if (game.status === "finished") return
     if (game.currentTurn !== user.uid) return
 
     setSelectedCards(previous => {
@@ -553,48 +537,55 @@ async function leaveRoom() {
       }
       return [...previous, card]
     })
-
   }
-
 
   /*
    * DISCARD
-   * performDiscard() holds the actual Firebase update so
-   * both the DISCARD button and a drag-to-the-pile drop
-   * can share it.
+   * performDiscard() is shared by the DISCARD button and drag-to-pile.
+   * Rules enforced here:
+   *  - can't discard the card you took until it has been used
+   *  - can't discard a card that fits on any meld on the table
    */
- async function performDiscard(card) {
+  async function performDiscard(card) {
 
-  const newHand = myHand.filter(item => item !== card)
-  const newDiscard = [...(game.discard || []), card]
-  const nextPlayer = user.uid === room.player1 ? room.player2 : room.player1
+    if (game.mustMeld) {
+      setMessage("You must use the card you took (" + game.mustMeld + ") in a meld first")
+      return
+    }
 
-  const updates = {
-    ["hands/" + user.uid]: newHand,
-    "game/discard": newDiscard
+    if (canCardGoOnAnyMeld(game.melds, card)) {
+      setMessage(card + " fits a meld — add it or keep it, you can't discard it")
+      return
+    }
+
+    const newHand = myHand.filter(item => item !== card)
+    const newDiscard = [...(game.discard || []), card]
+    const nextPlayer = user.uid === room.player1 ? room.player2 : room.player1
+
+    const updates = {
+      ["hands/" + user.uid]: newHand,
+      "game/discard": newDiscard,
+      "game/lastDiscarder": user.uid
+    }
+
+    if (newHand.length === 0) {
+      applyWinIfEmpty(updates, newHand)
+    } else {
+      updates["game/currentTurn"] = nextPlayer
+      updates["game/phase"] = "draw"
+      updates["game/hasDrawn"] = false
+    }
+
+    await update(ref(database, "rooms/" + roomCode), updates)
+
+    setSelectedCards([])
+    setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card discarded")
+
   }
-
-  if (newHand.length === 0) {
-    // Went out — instant win, game over right here
-    updates["game/status"] = "finished"
-    updates["game/winner"] = user.uid
-    updates["game/winReason"] = "emptyHand"
-  } else {
-    updates["game/currentTurn"] = nextPlayer
-    updates["game/phase"] = "draw"
-    updates["game/hasDrawn"] = false
-  }
-
-  await update(ref(database, "rooms/" + roomCode), updates)
-
-  setSelectedCards([])
-  setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card discarded")
-
-}
 
   async function discardSelected() {
-    if (game.status === "finished") return
     if (!game || !user) return
+    if (game.status === "finished") return
 
     if (game.currentTurn !== user.uid) {
       setMessage("It's not your turn")
@@ -612,52 +603,48 @@ async function leaveRoom() {
     }
 
     await performDiscard(selectedCards[0])
-
   }
 
+  /*
+   * END GAME BY LOWEST COUNT
+   */
+  async function endGameByLowestCount() {
+
+    const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
+    const hands = handsSnapshot.val() || {}
+
+    const p1Value = getHandValue(hands[room.player1] || [])
+    const p2Value = getHandValue(hands[room.player2] || [])
+
+    let winner
+
+    if (p1Value < p2Value) {
+      winner = room.player1
+    } else if (p2Value < p1Value) {
+      winner = room.player2
+    } else {
+      winner = "tie"
+    }
+
+    await update(ref(database, "rooms/" + roomCode), {
+      "game/status": "finished",
+      "game/winner": winner,
+      "game/winReason": "lowestCount"
+    })
+
+  }
 
   /*
    * DRAW
    */
-  /*
- * END GAME BY LOWEST COUNT
- * Called when the deck runs out and nobody has gone out.
- * Reads BOTH hands directly from Firebase (not just local
- * state) since we only track our own hand locally.
- */
-async function endGameByLowestCount() {
-
-  const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
-  const hands = handsSnapshot.val() || {}
-
-  const p1Value = getHandValue(hands[room.player1] || [])
-  const p2Value = getHandValue(hands[room.player2] || [])
-
-  let winner
-
-  if (p1Value < p2Value) {
-    winner = room.player1
-  } else if (p2Value < p1Value) {
-    winner = room.player2
-  } else {
-    winner = "tie"
-  }
-
-  await update(ref(database, "rooms/" + roomCode), {
-    "game/status": "finished",
-    "game/winner": winner,
-    "game/winReason": "lowestCount"
-  })
-
-}
   async function drawCard() {
-    if (game.status === "finished") return
-    if (!game.deck || game.deck.length === 0) {
-  await endGameByLowestCount()
-  return
-}
-
     if (!game || !user) return
+    if (game.status === "finished") return
+
+    if (!game.deck || game.deck.length === 0) {
+      await endGameByLowestCount()
+      return
+    }
 
     if (game.currentTurn !== user.uid) {
       setMessage("It's not your turn")
@@ -671,11 +658,6 @@ async function endGameByLowestCount() {
 
     if (game.hasDrawn) {
       setMessage("You already drew this turn")
-      return
-    }
-
-    if (!game.deck || game.deck.length === 0) {
-      setMessage("The deck is empty")
       return
     }
 
@@ -696,32 +678,67 @@ async function endGameByLowestCount() {
     setMessage("Card drawn!")
 
     setTimeout(() => setDrawing(false), 500)
+  }
+
+  /*
+   * TAKE THE OPPONENT'S DISCARD
+   * Only allowed when the card forms a meld with cards in my hand.
+   * The card is flagged as mustMeld — I can't discard until I've
+   * used it in a meld (or laid it off on an existing one).
+   */
+  const topDiscard = game?.discard?.length
+    ? game.discard[game.discard.length - 1]
+    : null
+
+  const canTakeDiscard = !!(
+    game &&
+    user &&
+    game.status === "playing" &&
+    game.currentTurn === user.uid &&
+    game.phase === "draw" &&
+    !game.hasDrawn &&
+    topDiscard &&
+    game.lastDiscarder !== user.uid &&
+    canFormMeldWithCard(myHand, topDiscard)
+  )
+
+  async function takeDiscard() {
+
+    if (!canTakeDiscard) {
+      setMessage("You can only take a discard that forms a meld with your hand")
+      return
+    }
+
+    const card = topDiscard
+    const newDiscard = game.discard.slice(0, -1)
+    const newHand = [...myHand, card]
+
+    await update(ref(database, "rooms/" + roomCode), {
+      "game/discard": newDiscard,
+      "game/hasDrawn": true,
+      "game/phase": "discard",
+      "game/mustMeld": card,
+      ["hands/" + user.uid]: newHand
+    })
+
+    setNewlyDrawnCard(card)
+    setSelectedCards([card])
+    setMessage("You took " + card + " — make a meld with it, then discard")
+
+  }
+
+  async function rematch() {
+
+    if (!roomCode || !room) return
+
+    await startGame(roomCode, room.player1, room.player2)
+    setSelectedCards([])
+    setMessage("Rematch started!")
 
   }
 
   /*
- * END GAME BY LOWEST COUNT
- * Called when the deck runs out and nobody has gone out.
- * Reads BOTH hands directly from Firebase (not just local
- * state) since we only track our own hand locally.
- */
-
-
-async function rematch() {
-
-  if (!roomCode || !room) return
-
-  await startGame(roomCode, room.player1, room.player2)
-  setSelectedCards([])
-  setMessage("Rematch started!")
-
-}
-
-
-  /*
    * DRAG END
-   * Either a drop on the discard pile, or a
-   * hand reorder.
    */
   async function handleDragEnd(event) {
 
@@ -732,6 +749,7 @@ async function rematch() {
     if (over.id === "discard-zone") {
 
       if (!game || !user) return
+      if (game.status === "finished") return
 
       if (game.currentTurn !== user.uid) {
         setMessage("It's not your turn")
@@ -766,10 +784,8 @@ async function rematch() {
 
   }
 
-
   /*
-   * SORT HAND (persists the new order to Firebase,
-   * same as a manual drag reorder would)
+   * SORT HAND
    */
   async function applySortedHand(sorted) {
 
@@ -806,7 +822,6 @@ async function rematch() {
 
   }
 
-
   const isMyTurn = game && user && game.currentTurn === user.uid
 
   const starterName =
@@ -817,7 +832,6 @@ async function rematch() {
       : ""
 
   const discardPile = game?.discard || []
-
 
   return {
     roomCode,
@@ -840,11 +854,13 @@ async function rematch() {
     sensors,
     createRoom,
     joinRoom,
-    createBahay,
-    addToBahay,
+    createMeld,
+    addToMeld,
     toggleCard,
     discardSelected,
     drawCard,
+    takeDiscard,
+    canTakeDiscard,
     handleDragEnd,
     sortHandBySuit,
     sortHandByRank,
@@ -853,8 +869,8 @@ async function rematch() {
     starterName,
     discardPile,
     leaveRoom,
-opponentDisconnected:
-  !!opponentUid && presence[opponentUid]?.online === false,
+    opponentDisconnected:
+      !!opponentUid && presence[opponentUid]?.online === false
   }
 
 }

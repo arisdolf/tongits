@@ -2,23 +2,23 @@ import CardBack from "./CardBack"
 import PlayingCard from "./PlayingCard"
 import DiscardDropZone from "./DiscardDropZone"
 import "../styles/DeckAndDiscard.css"
+
 function DeckAndDiscard({
   deckCount,
   drawing,
   onDraw,
   canDraw,
   discardPile,
-  onViewAll
+  onViewAll,
+  canTakeDiscard,
+  onTakeDiscard
 }) {
-  
+
   return (
     <div className="middle">
 
       <div className="pile-container">
-
-        <div className="pile-label">
-          DECK
-        </div>
+        <div className="pile-label">DECK</div>
 
         <button
           className={"deck " + (drawing ? "deck-drawing" : "")}
@@ -26,35 +26,33 @@ function DeckAndDiscard({
           disabled={!canDraw}
         >
           <CardBack className="deck-back" />
-          <span className="deck-count">
-            {deckCount}
-          </span>
+          <span className="deck-count">{deckCount}</span>
         </button>
-
       </div>
 
       <div className="pile-container">
-
-        <div className="pile-label">
-          DISCARD
-        </div>
+        <div className="pile-label">DISCARD</div>
 
         <DiscardDropZone>
-
-         {discardPile.length > 0 ? (
-  <div key={discardPile.length} className="discard-card-enter">
-    <PlayingCard
-      card={discardPile[discardPile.length - 1]}
-      size="small"
-    />
-  </div>
-) : (
-  <span className="discard-empty">
-    —
-  </span>
-)}
-
+          {discardPile.length > 0 ? (
+            <div key={discardPile.length} className="discard-card-enter">
+              <PlayingCard
+                card={discardPile[discardPile.length - 1]}
+                size="small"
+              />
+            </div>
+          ) : (
+            <span className="discard-empty">—</span>
+          )}
         </DiscardDropZone>
+
+        <button
+          className={"take-discard-button " + (canTakeDiscard ? "can-take" : "")}
+          onClick={onTakeDiscard}
+          disabled={!canTakeDiscard}
+        >
+          TAKE
+        </button>
 
         <button
           className="view-discards-button"
@@ -63,7 +61,6 @@ function DeckAndDiscard({
         >
           VIEW ALL
         </button>
-
       </div>
 
     </div>

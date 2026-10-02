@@ -1,11 +1,15 @@
-/*
- * CARD BACK
- * Shared back design for the deck and the opponent's hand.
- */
 import "../styles/CardBack.css"
+
 function CardBack({ className = "" }) {
   return (
-    <div className={"card-back " + className}>
+    <div
+      className={"card-back " + className}
+      style={{
+        backgroundImage: `url(${import.meta.env.BASE_URL}cards/Cardsback/back.png)`,
+        backgroundSize: "cover",
+        backgroundPosition: "center"
+      }}
+    >
       <div className="card-back-frame">
         <div className="card-back-emblem">T</div>
       </div>
