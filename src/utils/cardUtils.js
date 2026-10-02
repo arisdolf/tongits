@@ -73,7 +73,7 @@ export function getCardImageName(card) {
 // "10♥" -> "cards/frontcards/hearts/10h.png"
 export function getCardImagePath(card) {
   return (
-    "cards/frontcards/" +
+    "cards/CardsFront/" +
     suitFolders[getCardSuit(card)] +
     "/" +
     getCardImageName(card) +
