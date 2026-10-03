@@ -8,7 +8,7 @@ import {
 
 import { useTongitsGame } from "./hooks/useTongitsGame"
 
-import ErrorBoundary from './components/ErrorBoundary.jsx'
+
 
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
@@ -31,6 +31,7 @@ function collisionDetection(args) {
 //test run
 function App() {
 
+  
   const g = useTongitsGame()
 
   if (!g.roomCode) {
@@ -199,13 +200,6 @@ function App() {
   )
 }
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-)
 
 
 export default App
