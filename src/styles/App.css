@@ -84,7 +84,7 @@
 .leave-button {
   padding: 6px 12px !important;
   font-size: 11px !important;
-  background: rgba(255, 122, 69,) !important;
+  background: rgba(255, 122, 69, 0.85) !important;
   color: white !important;
 }
 
@@ -110,7 +110,7 @@
   padding: 8px 14px;
   border-radius: 10px;
 
-  background: rgba(255, 122, 69,);
+  background: rgba(255, 122, 69, 0.18);
   border: 1px solid #ff7a45;
   color: #ffb199;
 

@@ -556,7 +556,7 @@ export function useTongitsGame() {
     }
 
     if (game.phase !== "discard") {
-      age("Draw a card first")
+      warn("Draw a card first")
       return
     }
 

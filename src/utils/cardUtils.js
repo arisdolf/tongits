@@ -73,18 +73,31 @@ const rankAliases = {
   K: ["K", "k", "king", "13"]
 }
 
-// "J♥" -> list of image paths to try, in order
 export function getCardImagePaths(card) {
   const rank = getCardRank(card)
   const suit = getCardSuit(card)
   const folder = "cards/CardsFront/" + suitFolders[suit] + "/"
   const names = rankAliases[rank] || [rank]
+  const exts = ["png", "jpg", "jpeg", "webp"]
+  const letter = suitLetters[suit]
+  const full = suitFolders[suit]
 
   const paths = []
-  for (const name of names) {
-    paths.push(folder + name + suitLetters[suit] + ".png")
-    paths.push(folder + name + "_of_" + suitFolders[suit] + ".png")
+
+  for (const ext of exts) {
+    for (const name of names) {
+      paths.push(folder + name + letter + "." + ext)
+      paths.push(folder + name + "_of_" + full + "." + ext)
+    }
   }
+
+  for (const ext of exts) {
+    for (const name of names) {
+      paths.push(folder + name + letter.toUpperCase() + "." + ext)
+      paths.push(folder + name + "_of_" + full + "2." + ext)
+    }
+  }
+
   return paths
 }
 

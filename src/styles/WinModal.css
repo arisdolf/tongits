@@ -112,23 +112,19 @@
   color: #cfe3d8;
 }
 
-.rematch-button{
-  color: #2a1013;
-}
 .leave-link {
   display: block;
   margin: 12px auto 0;
   background: transparent !important;
-  color: #e0c4c4;
-  border: 1px solid #5a2830 !important;
+  color: #e0c4c4 !important;
+  border: 1px solid #6e3640 !important;
   min-width: 160px;
 }
 
 .leave-link:hover:not(:disabled) {
   border-color: #ff7a45 !important;
-  color: #ff7a45;
+  color: #ff7a45 !important;
 }
-
 .win-actions {
   position: sticky;
   bottom: 0;
