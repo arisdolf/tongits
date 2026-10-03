@@ -20,8 +20,8 @@
 
 .sort-toggle {
   background: transparent;
-  border: 1px solid #3b5d4e;
-  color: #cfe3d8;
+  border: 1px solid #6e3640;
+  color: #e0c4c4;
   padding: 8px 14px;
   font-size: 11px;
   letter-spacing: 1px;
@@ -29,8 +29,8 @@
 }
 
 .sort-toggle:hover:not(:disabled) {
-  border-color: #d8b45a;
-  color: #d8b45a;
+  border-color: #e6c35c;
+  color: #e6c35c;
   transform: none;
   filter: none;
 }
@@ -41,8 +41,8 @@
   right: 0;
   min-width: 150px;
 
-  background: #10261e;
-  border: 1px solid #28483b;
+  background: #2a1013;
+  border: 1px solid #5a2830;
   border-radius: 10px;
   padding: 6px;
 
@@ -57,7 +57,7 @@
 .sort-menu-item {
   background: transparent;
   border: none;
-  color: #cfe3d8;
+  color: #e0c4c4;
   text-align: left;
   padding: 8px 10px;
   font-size: 12px;
@@ -66,7 +66,7 @@
 
 .sort-menu-item:hover {
   background: rgba(216, 180, 90, 0.15);
-  color: #d8b45a;
+  color: #e6c35c;
   transform: none;
   filter: none;
 }

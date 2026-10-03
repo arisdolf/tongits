@@ -9,8 +9,8 @@
   padding: 10px 16px;
   border-radius: 12px;
 
-  background: #10261e;
-  border: 1px solid #28483b;
+  background: #2a1013;
+  border: 1px solid #5a2830;
   color: #cfe3d8;
 
   font-size: 13px;
@@ -30,7 +30,7 @@
 
 .toast-warn {
   background: rgba(90, 70, 20, 0.96);
-  border-color: #d8b45a;
+  border-color: #e6c35c;
   color: #f6e3b0;
 }
 

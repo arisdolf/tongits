@@ -6,7 +6,7 @@
 .modal-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(4, 12, 9, 0.72);
+  background: rgba(26, 8, 9, 0.75);
 
   display: flex;
   align-items: center;
@@ -23,8 +23,8 @@
   max-width: 480px;
   max-height: 80%;
 
-  background: #10261e;
-  border: 1px solid #28483b;
+  background: #2a1013;
+  border: 1px solid #5a2830;
   border-radius: 16px;
 
   padding: 18px;

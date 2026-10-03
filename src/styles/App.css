@@ -35,12 +35,12 @@
   background:
     radial-gradient(
       circle at center,
-      #0e5a40 0%,
-      #0c4a35 55%,
-      #0a402e 100%
+      #7a1f2b 0%,
+      #661a25 55%,
+      #531520 100%
     );
 
-  border: 10px solid #542f1c;
+  border: 10px solid #3a2418;
   border-radius: 35px;
   padding: 25px;
 
@@ -84,7 +84,7 @@
 .leave-button {
   padding: 6px 12px !important;
   font-size: 11px !important;
-  background: rgba(214, 90, 60, 0.85) !important;
+  background: rgba(255, 122, 69,) !important;
   color: white !important;
 }
 
@@ -92,7 +92,7 @@
 
 .turn-message {
   text-align: center;
-  color: #d8b45a;
+  color: #e6c35c;
   font-weight: bold;
   letter-spacing: 2px;
   font-size: 13px;
@@ -110,8 +110,8 @@
   padding: 8px 14px;
   border-radius: 10px;
 
-  background: rgba(214, 90, 60, 0.18);
-  border: 1px solid #d65a3c;
+  background: rgba(255, 122, 69,);
+  border: 1px solid #ff7a45;
   color: #ffb199;
 
   font-size: 12px;
@@ -129,8 +129,8 @@
   border-radius: 10px;
 
   background: rgba(216, 180, 90, 0.18);
-  border: 1px solid #d8b45a;
-  color: #f0d9a0;
+  border: 1px solid #e6c35c;
+  color: #f3dfa0;
 
   font-size: 12px;
   font-weight: bold;

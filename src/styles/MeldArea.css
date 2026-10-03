@@ -55,7 +55,7 @@
 }
 
 .my-meld       { border-color: rgba(80, 200, 120, 0.7); }
-.opponent-meld { border-color: rgba(255, 120, 120, 0.7); }
+.opponent-meld { border-color: rgba(111, 177, 255, 0.7); }
 
 .meld-header {
   text-align: center;
@@ -115,7 +115,7 @@
 /* THE SELECTED CARD FITS THIS MELD */
 
 .meld.can-add {
-  border-color: #d8b45a;
+  border-color: #e6c35c;
   box-shadow:
     0 0 0 2px rgba(216, 180, 90, 0.5),
     0 0 16px rgba(216, 180, 90, 0.8);
@@ -128,7 +128,7 @@
   right: -6px;
   z-index: 3;
 
-  background: #d8b45a;
+  background: #e6c35c;
   color: #172016;
 
   font-size: 9px;

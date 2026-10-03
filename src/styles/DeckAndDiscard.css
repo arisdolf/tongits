@@ -16,7 +16,7 @@
 
 .pile-label {
   font-size: 11px;
-  color: #b8ccc2;
+  color: #e0c4c4;
   margin-bottom: 7px;
   letter-spacing: 1px;
 }
@@ -95,7 +95,7 @@
 
 .discard-drop-over {
   box-shadow:
-    0 0 0 3px #d8b45a,
+    0 0 0 3px #e6c35c
     0 0 18px rgba(216, 180, 90, 0.6);
   transform: scale(1.06);
   transition:

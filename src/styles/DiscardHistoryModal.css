@@ -11,7 +11,7 @@
 
   font-size: 13px;
   letter-spacing: 1px;
-  color: #d8b45a;
+  color: #e6c35c;
   font-weight: bold;
 
   margin-bottom: 14px;
@@ -26,7 +26,7 @@
 }
 
 .modal-close:hover {
-  color: #d8b45a;
+  color: #e6c35c;
   transform: none;
   filter: none;
 }

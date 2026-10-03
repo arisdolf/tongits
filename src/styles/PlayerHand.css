@@ -54,7 +54,7 @@
 .selected-card .card-face {
   transform: translateY(-18px) scale(1.05);
   box-shadow:
-    0 0 0 3px #d8b45a,
+    0 0 0 3px #e6c35c,
     0 15px 25px rgba(0, 0, 0, 0.35);
 }
 
@@ -130,13 +130,13 @@
 }
 
 .card-help {
-  color: #a9c0b5;
+  color: #d4b8b8;
   font-size: 12px;
   margin-top: 12px;
 }
 
 .starter-info {
-  color: #d8b45a;
+  color: #e6c35c;
   font-size: 11px;
   margin-top: 5px;
 }
