@@ -111,3 +111,24 @@
   background: rgba(255, 255, 255, 0.12);
   color: #cfe3d8;
 }
+
+.leave-link {
+  display: block;
+  margin: 12px auto 0;
+  background: transparent !important;
+  color: #e0c4c4;
+  border: 1px solid #5a2830 !important;
+  min-width: 160px;
+}
+
+.leave-link:hover:not(:disabled) {
+  border-color: #ff7a45 !important;
+  color: #ff7a45;
+}
+
+.win-actions {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0 14px;
+  background: #2a1013;
+}

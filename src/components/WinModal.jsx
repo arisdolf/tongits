@@ -163,8 +163,18 @@ function WinModal({
           </tbody>
         </table>
 
-        {rematchSection}
+    
+                  <div className="win-actions">
 
+          {rematchSection}
+
+          {!opponentGone && (
+            <button className="rematch-button leave-link" onClick={onLeave}>
+              LEAVE ROOM
+            </button>
+          )}
+
+        </div>
       </div>
 
     </div>
