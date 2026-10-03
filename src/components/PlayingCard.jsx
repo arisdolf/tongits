@@ -11,28 +11,24 @@ function PlayingCard({ card, size = "normal" }) {
 
   const [attempt, setAttempt] = useState({ card, index: 0 })
 
-  const rank = getCardRank(card)
-  const suit = getCardSuit(card)
-  const red = isRedSuit(suit)
+const paths = getCardImagePaths(card)
+const index = attempt.card === card ? attempt.index : 0
 
-  const paths = getCardImagePaths(card)
-  const index = attempt.card === card ? attempt.index : 0
+// Photo version
+if (index < paths.length) {
+  return (
+    <div className={"playing-card photo-card " + size}>
+      <img
+        src={import.meta.env.BASE_URL + paths[index]}
+        alt={card}
+        draggable={false}
+        onError={() => setAttempt({ card, index: index + 1 })}
+      />
+    </div>
+  )
+}
 
-  // Photo version
-  if (index < paths.length) {
-    return (
-      <div className={"playing-card photo-card " + size}>
-        <img
-          src={import.meta.env.BASE_URL + paths[index]}
-          alt={card}
-          draggable={false}
-          onError={() => setAttempt({ card, index: index + 1 })}
-        />
-      </div>
-    )
-  }
-
-  // Fallback: text-based card
+  // Fallback: the original text-based card
   return (
     <div
       className={
