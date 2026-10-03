@@ -8,6 +8,8 @@ import {
 
 import { useTongitsGame } from "./hooks/useTongitsGame"
 
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
 import MeldArea from "./components/MeldArea"
@@ -196,5 +198,14 @@ function App() {
     </div>
   )
 }
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </StrictMode>,
+)
+
 
 export default App
