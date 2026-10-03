@@ -33,7 +33,13 @@ function DeckAndDiscard({
       <div className="pile-container">
         <div className="pile-label">DISCARD</div>
 
-        <DiscardDropZone>
+        <DiscardDropZone
+          canTake={canTakeDiscard}
+          onTap={onTakeDiscard}
+          onHold={() => {
+            if (discardPile.length > 0) onViewAll()
+          }}
+        >
           {discardPile.length > 0 ? (
             <div key={discardPile.length} className="discard-card-enter">
               <PlayingCard
@@ -45,22 +51,6 @@ function DeckAndDiscard({
             <span className="discard-empty">—</span>
           )}
         </DiscardDropZone>
-
-        <button
-          className={"take-discard-button " + (canTakeDiscard ? "can-take" : "")}
-          onClick={onTakeDiscard}
-          disabled={!canTakeDiscard}
-        >
-          TAKE
-        </button>
-
-        <button
-          className="view-discards-button"
-          onClick={onViewAll}
-          disabled={discardPile.length === 0}
-        >
-          VIEW ALL
-        </button>
       </div>
 
     </div>

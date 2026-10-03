@@ -37,8 +37,8 @@ function WinModal({
   const title = isTie
     ? "IT'S A TIE!"
     : iWon
-      ? "🎉 YOU WIN! 🎉"
-      : "OPPONENT WINS"
+      ? " eyy panalo "
+      : "lala talo"
 
   const reason =
     game.winReason === "emptyHand"

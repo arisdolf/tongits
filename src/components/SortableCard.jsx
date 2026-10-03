@@ -27,7 +27,7 @@ function SortableCard({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? "none" : transition,
-    zIndex: isDragging ? 20 : selected ? 10 : 1
+        zIndex: isDragging ? 20 : selected ? 10 : isNew ? 5 : 1
   }
 
   return (

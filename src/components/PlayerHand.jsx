@@ -106,18 +106,14 @@ function PlayerHand({
 
         <button
           onClick={onMeld}
-          disabled={
-            !isMyTurn ||
-            phase !== "discard" ||
-            selectedCards.length < 3
-          }
+          
         >
           MELD
         </button>
 
         <button
           onClick={onDiscard}
-          disabled={!isMyTurn || selectedCards.length !== 1}
+        
         >
           DISCARD
         </button>
@@ -131,13 +127,7 @@ function PlayerHand({
 
       </div>
 
-      <p className="card-help">
-        {isMyTurn
-          ? phase === "draw"
-            ? "Draw a card or take the discard (if it makes a meld), then meld / add to a meld, then discard."
-            : "Select cards to create a meld, add to a meld, or discard one card (a card that fits a meld can't be discarded)."
-          : "Wait for your turn"}
-      </p>
+    
 
       {selectedCards.length > 0 && (
         <p className="selection-info">

@@ -77,3 +77,27 @@
     padding: 7px 10px;
   }
 }
+
+@media (max-width: 600px) and (orientation: portrait) {
+
+  .sort-dropdown {
+    position: relative;
+    top: auto;
+    right: auto;
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 4px 6px;
+  }
+
+  .sort-menu {
+    top: calc(100% + 4px);
+    right: 0;
+  }
+
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .player-mine .player-name {
+    display: none;
+  }
+}

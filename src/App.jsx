@@ -114,25 +114,12 @@ function App() {
                 onTakeDiscard={g.takeDiscard}
               />
 
-              <div className="turn-message">
-                {g.isMyTurn
-                  ? g.game?.phase === "draw"
-                    ? "YOUR TURN — DRAW OR TAKE DISCARD"
-                    : "YOUR TURN — MELD / DISCARD"
-                  : "OPPONENT'S TURN"}
+                            <div className="turn-message">
+                {g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
               </div>
 
-              {g.isMyTurn && g.game?.phase === "draw" && (
-                <div className="turn-warning">
-                  ⚠ Draw (or take a usable discard) first — you can't meld or discard yet.
-                </div>
-              )}
-
-              {g.isMyTurn && g.game?.mustMeld && (
-                <div className="turn-warning">
-                  ⚠ You took {g.game.mustMeld} — use it in a meld or add it to one before discarding.
-                </div>
-              )}
+              
+              
 
             </div>
 

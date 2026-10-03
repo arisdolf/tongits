@@ -11,7 +11,8 @@ import {
   canCardGoOnAnyMeld,
   canFormMeldWithCard,
   sortMeldCards,
-  sortHandByMode
+  sortHandByMode,
+  mergeMelds
 } from "../utils/cardUtils"
 import { emptyStats, getStat } from "../utils/stats"
 
@@ -58,8 +59,14 @@ export function useTongitsGame() {
   /*
    * TOAST NOTIFIER
    */
+
+
   function notify(text, type = "info") {
     setToast({ id: Date.now(), text, type })
+  }
+
+  function warn(text) {
+    notify(text, "warn")
   }
 
   useEffect(() => {
@@ -538,6 +545,8 @@ export function useTongitsGame() {
    */
   async function createMeld() {
 
+
+
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -547,7 +556,7 @@ export function useTongitsGame() {
     }
 
     if (game.phase !== "discard") {
-      setMessage("Draw a card first")
+      age("Draw a card first")
       return
     }
 
@@ -573,7 +582,7 @@ export function useTongitsGame() {
     }
 
     const newHand = myHand.filter(card => !selectedCards.includes(card))
-    const updatedMelds = [...(game.melds || []), newMeld]
+    const updatedMelds = mergeMelds([...(game.melds || []), newMeld])
 
     const updates = {
       ["hands/" + user.uid]: newHand,
@@ -597,6 +606,8 @@ export function useTongitsGame() {
    */
   async function addToMeld(meldId) {
 
+
+
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -606,7 +617,7 @@ export function useTongitsGame() {
     }
 
     if (game.phase !== "discard") {
-      setMessage("Draw a card first")
+      setMessage("Draw a card from the pile first")
       return
     }
 
@@ -634,10 +645,12 @@ export function useTongitsGame() {
       return
     }
 
-    const updatedMelds = (game.melds || []).map(item =>
-      item.id === meldId
-        ? { ...item, cards: sortMeldCards([...item.cards, card]) }
-        : item
+    const updatedMelds = mergeMelds(
+      (game.melds || []).map(item =>
+        item.id === meldId
+          ? { ...item, cards: sortMeldCards([...item.cards, card]) }
+          : item
+      )
     )
 
     const newHand = myHand.filter(item => item !== card)
@@ -730,7 +743,7 @@ export function useTongitsGame() {
     }
 
     if (game.phase !== "discard") {
-      setMessage("You must draw a card first")
+      setMessage("Draw a card from the pile first")
       return
     }
 
@@ -850,8 +863,25 @@ export function useTongitsGame() {
 
   async function takeDiscard() {
 
+    if (!game || !user || !topDiscard) return
+
+    if (game.currentTurn !== user.uid) {
+      warn("It's not your turn")
+      return
+    }
+
+    if (game.phase !== "draw" || game.hasDrawn) {
+      warn("You can only take a discard at the start of your turn")
+      return
+    }
+
+    if (game.lastDiscarder === user.uid) {
+      warn("You can't take your own discard")
+      return
+    }
+
     if (!canTakeDiscard) {
-      setMessage("You can only take a discard that forms a meld with your hand")
+      warn("That card doesn't form a meld with your hand")
       return
     }
 
@@ -873,7 +903,7 @@ export function useTongitsGame() {
 
     setNewlyDrawnCard(card)
     setSelectedCards([card])
-    setMessage("You took " + card + " — make a meld with it, then discard")
+    setMessage("You took " + card)
 
   }
 
@@ -941,7 +971,7 @@ export function useTongitsGame() {
       }
 
       if (game.phase !== "discard") {
-        setMessage("Draw a card before you can discard")
+        setMessage("Draw a card from the pile first")
         return
       }
 

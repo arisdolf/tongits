@@ -237,3 +237,39 @@ export function sortHandByMode(hand, mode) {
   return hand
 }
 
+/*
+ * MERGE MELDS
+ * If two melds together form one valid meld (e.g. 3-4-5 and 6-7-8
+ * of the same suit), join them into one. Repeats until nothing joins.
+ * The merged meld keeps the older meld's id and owner.
+ */
+export function mergeMelds(melds) {
+
+  const result = [...melds]
+  let merged = true
+
+  while (merged) {
+
+    merged = false
+
+    outer:
+    for (let i = 0; i < result.length; i++) {
+      for (let j = i + 1; j < result.length; j++) {
+
+        const combined = [...result[i].cards, ...result[j].cards]
+
+        if (isValidMeld(combined)) {
+          result[i] = { ...result[i], cards: sortMeldCards(combined) }
+          result.splice(j, 1)
+          merged = true
+          break outer
+        }
+
+      }
+    }
+
+  }
+
+  return result
+
+}
