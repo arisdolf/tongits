@@ -66,19 +66,26 @@ const suitFolders = {
 }
 
 // "10♥" -> "10h"
-export function getCardImageName(card) {
-  return getCardRank(card) + suitLetters[getCardSuit(card)]
+const rankAliases = {
+  A: ["A", "a", "ace", "1"],
+  J: ["J", "j", "jack", "11"],
+  Q: ["Q", "q", "queen", "12"],
+  K: ["K", "k", "king", "13"]
 }
 
-// "10♥" -> "cards/frontcards/hearts/10h.png"
-export function getCardImagePath(card) {
-  return (
-    "cards/CardsFront/" +
-    suitFolders[getCardSuit(card)] +
-    "/" +
-    getCardImageName(card) +
-    ".png"
-  )
+// "J♥" -> list of image paths to try, in order
+export function getCardImagePaths(card) {
+  const rank = getCardRank(card)
+  const suit = getCardSuit(card)
+  const folder = "cards/CardsFront/" + suitFolders[suit] + "/"
+  const names = rankAliases[rank] || [rank]
+
+  const paths = []
+  for (const name of names) {
+    paths.push(folder + name + suitLetters[suit] + ".png")
+    paths.push(folder + name + "_of_" + suitFolders[suit] + ".png")
+  }
+  return paths
 }
 
 

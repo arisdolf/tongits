@@ -2,34 +2,31 @@ import { useState } from "react"
 import {
   getCardRank,
   getCardSuit,
-  getCardImagePath,
+  getCardImagePaths,
   isRedSuit
 } from "../utils/cardUtils"
 import "../styles/PlayingCard.css"
 
 function PlayingCard({ card, size = "normal" }) {
 
-  const [failedCard, setFailedCard] = useState(null)
+  const [attempt, setAttempt] = useState({ card, index: 0 })
 
-  const rank = getCardRank(card)
-  const suit = getCardSuit(card)
-  const red = isRedSuit(suit)
+const paths = getCardImagePaths(card)
+const index = attempt.card === card ? attempt.index : 0
 
-    const src = import.meta.env.BASE_URL + getCardImagePath(card)
-
-  // Photo version
-  if (failedCard !== card) {
-    return (
-      <div className={"playing-card photo-card " + size}>
-        <img
-          src={src}
-          alt={card}
-          draggable={false}
-          onError={() => setFailedCard(card)}
-        />
-      </div>
-    )
-  }
+// Photo version
+if (index < paths.length) {
+  return (
+    <div className={"playing-card photo-card " + size}>
+      <img
+        src={import.meta.env.BASE_URL + paths[index]}
+        alt={card}
+        draggable={false}
+        onError={() => setAttempt({ card, index: index + 1 })}
+      />
+    </div>
+  )
+}
 
   // Fallback: the original text-based card
   return (
