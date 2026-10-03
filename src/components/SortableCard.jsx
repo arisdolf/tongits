@@ -22,14 +22,12 @@ function SortableCard({
     id: id
   })
 
+  // The button ONLY carries dnd-kit's transform.
+  // Lift / hover / glow live on the inner .card-face.
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? "none" : transition,
-    zIndex: isDragging
-      ? 20
-      : selected
-        ? 10
-        : 1
+    zIndex: isDragging ? 20 : selected ? 10 : 1
   }
 
   return (
@@ -47,12 +45,10 @@ function SortableCard({
       }
       onClick={() => onSelect(card)}
     >
-      {isNew && (
-        <span className="new-badge">
-          NEW
-        </span>
-      )}
-      <PlayingCard card={card} />
+      <div className="card-face">
+        {isNew && <span className="new-badge">NEW</span>}
+        <PlayingCard card={card} />
+      </div>
     </button>
   )
 }

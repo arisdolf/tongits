@@ -11,6 +11,20 @@
   padding: 20px;
 }
 
+/* TABLE BODY — zones so landscape can rearrange them */
+
+.table-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.zone-center {
+  text-align: center;
+}
+
 /* TABLE */
 
 .table {

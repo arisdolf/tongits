@@ -201,3 +201,39 @@ export function canFormMeldWithCard(hand, card) {
   return left + right + 1 >= 3
 
 }
+
+/*
+ * Sort the cards of a meld: sets by suit, runs low → high
+ */
+export function sortMeldCards(cards) {
+  const values = cards.map(getCardValue)
+  const isSet = values.every(v => v === values[0])
+
+  return [...cards].sort((a, b) =>
+    isSet
+      ? suitOrder[getCardSuit(a)] - suitOrder[getCardSuit(b)]
+      : getCardValue(a) - getCardValue(b)
+  )
+}
+
+/*
+ * Sort a hand by mode: "suit" | "rank" | null (leave as is)
+ */
+export function sortHandByMode(hand, mode) {
+  if (mode === "suit") {
+    return [...hand].sort((a, b) => {
+      const d = suitOrder[getCardSuit(a)] - suitOrder[getCardSuit(b)]
+      return d !== 0 ? d : getCardValue(a) - getCardValue(b)
+    })
+  }
+
+  if (mode === "rank") {
+    return [...hand].sort((a, b) => {
+      const d = getCardValue(b) - getCardValue(a)
+      return d !== 0 ? d : suitOrder[getCardSuit(a)] - suitOrder[getCardSuit(b)]
+    })
+  }
+
+  return hand
+}
+

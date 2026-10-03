@@ -1,0 +1,245 @@
+@media (orientation: landscape) and (max-height: 520px) {
+
+    .game {
+        min-height: 100dvh;
+        padding: 4px;
+        align-items: stretch;
+    }
+
+    .table {
+        min-height: calc(100dvh - 8px);
+        padding: 6px 12px;
+        border-width: 4px;
+        border-radius: 16px;
+    }
+
+    .top-bar {
+        font-size: 11px;
+    }
+
+    .top-bar strong {
+        font-size: 14px;
+    }
+
+    .leave-button {
+        padding: 4px 10px !important;
+    }
+
+    /* layout */
+    .table-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "opp   center"
+            "melds center"
+            "hand  hand";
+        column-gap: 12px;
+        row-gap: 4px;
+    }
+
+    .zone-opp {
+        grid-area: opp;
+    }
+
+    .zone-melds {
+        grid-area: melds;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .zone-center {
+        grid-area: center;
+        align-self: center;
+    }
+
+    .zone-hand {
+        grid-area: hand;
+    }
+
+    /* hide the wordy bits */
+    .player-name,
+    .card-help,
+    .starter-info,
+    .selection-info {
+        display: none;
+    }
+
+    .message {
+        font-size: 10px;
+        margin: 2px 0 0;
+        text-align: center;
+    }
+
+    /* opponent */
+    .opponent .cards {
+        min-height: 0;
+        flex-wrap: nowrap;
+    }
+
+    .opponent .card {
+        width: 28px;
+        height: 39px;
+        margin: 0 1px;
+    }
+
+    .opponent-count {
+        font-size: 9px;
+        margin-top: 2px;
+    }
+
+    /* my hand: 13–14 cards always fit on one row */
+    .cards {
+        min-height: 0;
+        flex-wrap: nowrap;
+    }
+
+    .my-hand .card {
+        width: min(42px, calc((100vw - 60px) / 14 - 2px));
+        height: auto;
+        aspect-ratio: 65 / 90;
+        margin: 0 1px;
+    }
+
+    .hand-actions {
+        margin-top: 4px;
+        gap: 6px;
+    }
+
+    .hand-actions button {
+        min-width: 70px;
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+
+    .sort-dropdown {
+        top: auto;
+        bottom: 0;
+        right: 0;
+    }
+
+    .sort-toggle {
+        padding: 6px 10px;
+        font-size: 10px;
+    }
+
+    .sort-menu {
+        top: auto;
+        bottom: calc(100% + 4px);
+    }
+
+    /* deck + discard */
+    .middle {
+        gap: 16px;
+    }
+
+    .pile-label {
+        font-size: 9px;
+        margin-bottom: 3px;
+    }
+
+    .deck,
+    .discard {
+        width: 46px;
+        height: 64px;
+    }
+
+    .take-discard-button,
+    .view-discards-button {
+        padding: 4px 8px;
+        margin-top: 4px;
+        font-size: 9px;
+    }
+
+    .turn-message {
+        font-size: 10px;
+        margin-top: 6px;
+        letter-spacing: 1px;
+    }
+
+    .turn-warning {
+        max-width: 190px;
+        font-size: 9px;
+        padding: 4px 8px;
+        margin-top: 4px;
+    }
+
+    /* melds */
+    .meld-area {
+        margin: 0;
+        padding: 4px 8px;
+    }
+
+    .meld-title {
+        margin-bottom: 4px;
+    }
+
+    .meld-list {
+        gap: 6px;
+    }
+
+    .meld {
+        padding: 3px 6px 5px;
+    }
+
+    .meld-card {
+        width: 26px;
+        height: 37px;
+        margin-left: -15px;
+    }
+
+    .meld-expanded .meld-card {
+        width: 34px;
+        height: 48px;
+        margin-left: 3px;
+    }
+
+    .meld-expanded .meld-cards {
+        max-width: 260px;
+    }
+
+    /* modals */
+    .modal-panel {
+        max-height: 96%;
+        padding: 12px;
+    }
+
+    .win-title {
+        font-size: 20px;
+    }
+
+    .rating-grade {
+        font-size: 28px;
+    }
+
+    .stats-table {
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+
+    /* lobby */
+    .lobby {
+        padding: 14px 20px;
+    }
+
+    .title {
+        font-size: 26px;
+    }
+
+    .subtitle {
+        margin-bottom: 10px;
+    }
+
+    .join-area {
+        margin-top: 10px;
+        padding-top: 10px;
+    }
+
+    .lobby button {
+        padding: 8px 14px;
+    }
+
+    .lobby input {
+        padding: 8px;
+    }
+}

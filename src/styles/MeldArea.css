@@ -1,66 +1,93 @@
 /* =========================
-  meld AREA
-   Used by: meldArea.jsx
+   MELD AREA — compact, overlapped like a hand
+   Used by: MeldArea.jsx
 ========================= */
 
 .meld-area {
   width: 100%;
-  margin: 25px 0;
-  padding: 15px;
-  border-radius: 16px;
+  margin: 12px 0;
+  padding: 8px 10px;
+  border-radius: 14px;
   background: rgba(0, 0, 0, 0.25);
 }
 
 .meld-title {
   text-align: center;
   font-weight: bold;
-  margin-bottom: 15px;
+  font-size: 11px;
+  margin-bottom: 8px;
   letter-spacing: 2px;
+  opacity: 0.85;
 }
 
 .meld-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 15px;
+  gap: 10px;
 }
 
 .empty-meld {
   opacity: 0.6;
-  padding: 20px;
+  padding: 6px;
+  font-size: 12px;
 }
 
 .meld {
-  min-width: 180px;
-  padding: 12px;
-  border-radius: 12px;
+  position: relative;
+  padding: 5px 8px 8px;
+  border-radius: 10px;
   background: rgba(0, 0, 0, 0.35);
   border: 2px solid rgba(255, 255, 255, 0.15);
+
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease;
 }
 
-.my-meld { border-color: rgba(80, 200, 120, 0.7); }
+.meld:hover {
+  transform: translateY(-2px);
+}
+
+.my-meld       { border-color: rgba(80, 200, 120, 0.7); }
 .opponent-meld { border-color: rgba(255, 120, 120, 0.7); }
 
 .meld-header {
   text-align: center;
-  font-size: 12px;
-  margin-bottom: 8px;
-  opacity: 0.8;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  opacity: 0.75;
 }
 
 .meld-cards {
   display: flex;
   justify-content: center;
-  gap: 4px;
-  flex-wrap: wrap;
+  align-items: center;
 }
 
 .meld-card {
-  width: 45px;
-  height: 63px;
-  min-width: 45px;
+  width: 38px;
+  height: 53px;
+  flex: none;
   position: relative;
+  margin-left: -21px;
+
+  transition:
+    margin 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease;
+
   animation: meldCardIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.meld-card:first-child {
+  margin-left: 0;
 }
 
 @keyframes meldCardIn {
@@ -68,30 +95,51 @@
   to   { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
 }
 
-.layoff-button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 7px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.12) !important;
-  color: #cfe3d8 !important;
-  font-weight: bold;
-  transition: box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+/* TAPPED — fan the cards out */
+
+.meld-expanded .meld-cards {
+  flex-wrap: wrap;
+  max-width: 340px;
 }
 
-.layoff-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.meld-expanded .meld-card {
+  width: 46px;
+  height: 64px;
+  margin-left: 4px;
 }
 
-.layoff-button.can-add {
-  background: #d8b45a !important;
-  color: #172016 !important;
-  opacity: 1;
-  box-shadow: 0 0 8px rgba(216, 180, 90, 0.55);
+.meld-expanded .meld-card:first-child {
+  margin-left: 0;
+}
+
+/* THE SELECTED CARD FITS THIS MELD */
+
+.meld.can-add {
+  border-color: #d8b45a;
+  box-shadow:
+    0 0 0 2px rgba(216, 180, 90, 0.5),
+    0 0 16px rgba(216, 180, 90, 0.8);
   animation: addPulse 1.1s infinite;
+}
+
+.meld-add-badge {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  z-index: 3;
+
+  background: #d8b45a;
+  color: #172016;
+
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+
+  padding: 2px 6px;
+  border-radius: 6px;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
 
 @keyframes addPulse {
@@ -100,11 +148,8 @@
 }
 
 @media (max-width: 600px) {
-  .meld-area { margin: 15px 0; padding: 10px; }
-  .meld { min-width: 140px; padding: 8px; }
-  .meld-card { width: 34px; height: 48px; min-width: 34px; }
-}
-
-@media (max-width: 380px) {
-  .meld { min-width: 120px; }
+  .meld-area { margin: 8px 0; padding: 6px; }
+  .meld-card { width: 32px; height: 45px; margin-left: -18px; }
+  .meld-expanded .meld-card { width: 40px; height: 56px; }
+  .meld-expanded .meld-cards { max-width: 260px; }
 }

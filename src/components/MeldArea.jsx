@@ -1,5 +1,6 @@
+import { useState } from "react"
 import PlayingCard from "./PlayingCard"
-import { canAddToMeld } from "../utils/cardUtils"
+import { canAddToMeld, sortMeldCards } from "../utils/cardUtils"
 import "../styles/MeldArea.css"
 
 function MeldArea({
@@ -11,6 +12,16 @@ function MeldArea({
   mustMeld,
   onAddToMeld
 }) {
+
+  const [expandedId, setExpandedId] = useState(null)
+
+  const selected = selectedCards.length === 1 ? selectedCards[0] : null
+
+  const canUseSelected =
+    isMyTurn &&
+    phase === "discard" &&
+    !!selected &&
+    (!mustMeld || selected === mustMeld)
 
   return (
     <div className="meld-area">
@@ -27,46 +38,49 @@ function MeldArea({
 
           meldList.map(meld => {
 
-            const canAdd =
-              isMyTurn &&
-              phase === "discard" &&
-              selectedCards.length === 1 &&
-              (!mustMeld || selectedCards[0] === mustMeld) &&
-              canAddToMeld(meld, selectedCards[0])
+            const canAdd = canUseSelected && canAddToMeld(meld, selected)
+            const expanded = expandedId === meld.id
+            const mine = meld.owner === currentUserId
+
+            function handleTap() {
+              if (canAdd) {
+                onAddToMeld(meld.id)
+                return
+              }
+              setExpandedId(expanded ? null : meld.id)
+            }
 
             return (
 
               <div
+                key={meld.id}
+                role="button"
+                tabIndex={0}
+                onClick={handleTap}
+                onKeyDown={e => {
+                  if (e.key === "Enter" || e.key === " ") handleTap()
+                }}
                 className={
                   "meld " +
-                  (meld.owner === currentUserId ? "my-meld" : "opponent-meld")
+                  (mine ? "my-meld " : "opponent-meld ") +
+                  (expanded ? "meld-expanded " : "") +
+                  (canAdd ? "can-add" : "")
                 }
-                key={meld.id}
               >
 
                 <div className="meld-header">
-                  <span>
-                    {meld.owner === currentUserId ? "YOUR MELD" : "OPPONENT MELD"}
-                  </span>
+                  {mine ? "YOU" : "OPP"} · {meld.cards.length}
                 </div>
 
                 <div className="meld-cards">
-                  {meld.cards.map((card, i) => (
-                    <div className="meld-card" key={card + i}>
+                  {sortMeldCards(meld.cards).map(card => (
+                    <div className="meld-card" key={card}>
                       <PlayingCard card={card} size="small" />
                     </div>
                   ))}
                 </div>
 
-                {isMyTurn && (
-                  <button
-                    className={"layoff-button " + (canAdd ? "can-add" : "")}
-                    onClick={() => onAddToMeld(meld.id)}
-                    disabled={!canAdd}
-                  >
-                    ADD CARD
-                  </button>
-                )}
+                {canAdd && <span className="meld-add-badge">+ ADD</span>}
 
               </div>
 
