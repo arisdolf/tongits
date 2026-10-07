@@ -66,6 +66,7 @@ function MeldArea({
                   (expanded ? "meld-expanded " : "") +
                   (canAdd ? "can-add" : "")
                 }
+                data-meld-id={meld.id}
               >
 
                 <div className="meld-header">

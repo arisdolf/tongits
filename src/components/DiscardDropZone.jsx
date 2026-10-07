@@ -58,6 +58,7 @@ function DiscardDropZone({ children, canTake, onTap, onHold }) {
       onPointerCancel={cancelHold}
       onClick={handleClick}
       onContextMenu={e => e.preventDefault()}
+      data-fly="discard"
     >
       {children}
     </div>

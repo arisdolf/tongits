@@ -2,56 +2,60 @@ import { useState } from "react"
 import {
   getCardRank,
   getCardSuit,
-  getCardImagePaths,
-  isRedSuit
+  isRedSuit,
+  getCardImagePaths
 } from "../utils/cardUtils"
 import "../styles/PlayingCard.css"
 
-function PlayingCard({ card, size = "normal" }) {
-
-  const [attempt, setAttempt] = useState({ card, index: 0 })
-
-  const rank = getCardRank(card)
-  const suit = getCardSuit(card)
-  const red = isRedSuit(suit)
+function CardFace({ card, size }) {
+  const [pathIndex, setPathIndex] = useState(0)
 
   const paths = getCardImagePaths(card)
-  const index = attempt.card === card ? attempt.index : 0
+  const rank = getCardRank(card)
+  const suit = getCardSuit(card)
+  const sizeClass = size ? " " + size : ""
 
-  // Photo version
-  if (index < paths.length) {
+  // try each possible image filename until one loads
+  if (pathIndex < paths.length) {
     return (
-      <div className={"playing-card photo-card " + size}>
+      <div className={"playing-card photo-card" + sizeClass}>
         <img
-          src={import.meta.env.BASE_URL + paths[index]}
+          src={import.meta.env.BASE_URL + paths[pathIndex]}
           alt={card}
           draggable={false}
-          onError={() => setAttempt({ card, index: index + 1 })}
+          onError={() => setPathIndex(i => i + 1)}
         />
       </div>
     )
   }
 
-  // Fallback: text-based card
+  // fallback: plain text card
   return (
     <div
       className={
-        "playing-card " + size + " " + (red ? "red-suit" : "black-suit")
+        "playing-card " +
+        (isRedSuit(suit) ? "red-suit" : "black-suit") +
+        sizeClass
       }
     >
-      <span className="pc-corner pc-corner-top">
+      <div className="pc-corner">
         <span className="pc-rank">{rank}</span>
         <span className="pc-suit">{suit}</span>
-      </span>
+      </div>
 
       <span className="pc-center-suit">{suit}</span>
 
-      <span className="pc-corner pc-corner-bottom">
+      <div className="pc-corner pc-corner-bottom">
         <span className="pc-rank">{rank}</span>
         <span className="pc-suit">{suit}</span>
-      </span>
+      </div>
     </div>
   )
+}
+
+// key={card} resets the image-fallback state when the card changes
+function PlayingCard({ card, size = "" }) {
+  return <CardFace key={card} card={card} size={size} />
 }
 
 export default PlayingCard

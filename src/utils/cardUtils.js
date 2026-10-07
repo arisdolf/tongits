@@ -3,6 +3,7 @@
  * Pure helper functions only — no React, no state, no Firebase.
  */
 
+
 export function getHandValue(hand) {
   return hand.reduce((total, card) => total + getCardValue(card), 0)
 }
@@ -124,6 +125,62 @@ export function createDeck() {
 
   return deck
 
+}
+
+export function findBestMelds(hand) {
+  const cands = []
+
+  // sets (3 or 4 of a kind)
+  const byValue = {}
+  hand.forEach(c => (byValue[getCardValue(c)] ||= []).push(c))
+  for (const cards of Object.values(byValue)) {
+    if (cards.length < 3) continue
+    cands.push(cards)
+    if (cards.length === 4) {
+      for (let skip = 0; skip < 4; skip++) {
+        cands.push(cards.filter((_, i) => i !== skip))
+      }
+    }
+  }
+
+  // runs (same suit, consecutive, 3+)
+  const bySuit = {}
+  hand.forEach(c => (bySuit[getCardSuit(c)] ||= []).push(c))
+  for (const cards of Object.values(bySuit)) {
+    const s = [...cards].sort((a, b) => getCardValue(a) - getCardValue(b))
+    for (let i = 0; i < s.length; i++) {
+      for (let j = i + 2; j < s.length; j++) {
+        const slice = s.slice(i, j + 1)
+        if (getCardValue(slice[slice.length - 1]) - getCardValue(slice[0]) === slice.length - 1) {
+          cands.push(slice)
+        }
+      }
+    }
+  }
+
+  // pick the disjoint combination that gets rid of the most points
+  let best = { score: 0, picks: [] }
+
+  function dfs(start, used, picks, score) {
+    if (score > best.score) best = { score, picks: [...picks] }
+    for (let i = start; i < cands.length; i++) {
+      const m = cands[i]
+      if (m.some(c => used.has(c))) continue
+      m.forEach(c => used.add(c))
+      picks.push(m)
+      dfs(i + 1, used, picks, score + getHandValue(m))
+      picks.pop()
+      m.forEach(c => used.delete(c))
+    }
+  }
+
+  dfs(0, new Set(), [], 0)
+
+  const grouped = new Set(best.picks.flat())
+  return {
+    groups: best.picks.map(sortMeldCards),
+    rest: hand.filter(c => !grouped.has(c))
+  }
 }
 
 

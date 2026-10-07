@@ -95,7 +95,7 @@
 
 .discard-drop-over {
   box-shadow:
-    0 0 0 3px #e6c35c
+    0 0 0 3px #e6c35c,
     0 0 18px rgba(216, 180, 90, 0.6);
   transform: scale(1.06);
   transition:
@@ -123,11 +123,14 @@
     transform: translate(0, 0) scale(1) rotate(0deg);
   }
 }
-
 .discard-card-enter {
   width: 100%;
   height: 100%;
-  animation: discardLand 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: discardReveal 0.01s linear 0.4s backwards;
+}
+@keyframes discardReveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 

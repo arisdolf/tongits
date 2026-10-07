@@ -1,7 +1,7 @@
 import { buildGameReport } from "../utils/stats"
 import "../styles/Modal.css"
 import "../styles/WinModal.css"
-
+import { useState, useEffect } from "react"
 function WinModal({
   game,
   room,
@@ -16,15 +16,57 @@ function WinModal({
   onLeave
 }) {
 
-  if (!game || game.status !== "finished" || !room) {
-    return null
-  }
+  const [musicOn, setMusicOn] = useState(true)
 
-  const isTie = game.winner === "tie"
-  const iWon = game.winner === currentUserId
+  const finished = !!game && game.status === "finished" && !!room
+  const iWon = finished && game.winner === currentUserId
+  const myStreak = room?.scores?.[currentUserId]?.streak || 0
+  const myLoseStreak = room?.scores?.[currentUserId]?.loseStreak || 0
+  const isTie = finished && game.winner === "tie"
+  const playMusic = iWon && myStreak >= 2 && musicOn
+  const playLoseMusic = finished && !iWon && !isTie && myLoseStreak >= 2 && musicOn
+
+  useEffect(() => {
+    if (!playMusic) return
+
+    const audio = new Audio(import.meta.env.BASE_URL + "audio/streak.mp3")
+    audio.loop = true
+    audio.volume = 0.6
+    audio.play().catch(() => { })
+
+    return () => {
+      audio.pause()
+      audio.currentTime = 0
+    }
+  }, [playMusic])
+
+  useEffect(() => {
+  if (!playLoseMusic) return
+
+  const audio = new Audio(import.meta.env.BASE_URL + "audio/losestreak.mp3")
+  audio.loop = true
+  audio.volume = 0.6
+  audio.play().catch(() => {})
+
+  return () => {
+    audio.pause()
+    audio.currentTime = 0
+  }
+}, [playLoseMusic])
+
+  if (!finished) return null
+
+
+
+ 
+
 
   const opponentUid =
     room.player1 === currentUserId ? room.player2 : room.player1
+
+  const myScore = room.scores?.[currentUserId] || {}
+  const oppScore = room.scores?.[opponentUid] || {}
+  const oppStreak = oppScore.streak || 0
 
   const { me, opp } = buildGameReport({
     game,
@@ -125,7 +167,31 @@ function WinModal({
 
         <div className="win-title">{title}</div>
         <p className="win-reason">{reason}</p>
+       <div className="win-score">
+  YOU {myScore.wins || 0} – {oppScore.wins || 0} OPP
+</div>
 
+{iWon && myStreak >= 2 && (
+  <div className="streak-banner">
+    🔥 {myStreak} win streak!
+    <button className="music-toggle" onClick={() => setMusicOn(m => !m)}>
+      {musicOn ? "🔊" : "🔇"}
+    </button>
+  </div>
+)}
+
+{!iWon && !isTie && myLoseStreak >= 2 && (
+  <div className="streak-banner opp">
+    💀 {myLoseStreak} loss streak
+    <button className="music-toggle" onClick={() => setMusicOn(m => !m)}>
+      {musicOn ? "🔊" : "🔇"}
+    </button>
+  </div>
+)}
+
+{!iWon && !isTie && myLoseStreak < 2 && oppStreak >= 2 && (
+  <div className="streak-banner opp">Opponent is on a {oppStreak} win streak</div>
+)}
         <div className="ratings">
 
           <div className="rating">
@@ -163,8 +229,8 @@ function WinModal({
           </tbody>
         </table>
 
-    
-                  <div className="win-actions">
+
+        <div className="win-actions">
 
           {rematchSection}
 

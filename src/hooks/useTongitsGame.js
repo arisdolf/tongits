@@ -3,37 +3,20 @@ import { database, auth } from "../firebase"
 import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp } from "firebase/database"
 import { onAuthStateChanged } from "firebase/auth"
 import {
-  getHandValue,
-  createDeck,
-  shuffleDeck,
-  isValidMeld,
-  canAddToMeld,
-  canCardGoOnAnyMeld,
-  canFormMeldWithCard,
-  sortMeldCards,
-  sortHandByMode,
-  mergeMelds
+  getHandValue, createDeck, shuffleDeck, isValidMeld, canAddToMeld,
+  canCardGoOnAnyMeld, canFormMeldWithCard, sortMeldCards,
+  sortHandByMode, mergeMelds, findBestMelds
 } from "../utils/cardUtils"
 import { emptyStats, getStat } from "../utils/stats"
-
-import {
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors
-} from "@dnd-kit/core"
-
+import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
+import { flyCard } from "../utils/fly"
 
-/*
- * useTongitsGame
- * Every piece of state, every Firebase listener, and every
- * game action lives in this one hook.
- */
+const $ = selector => document.querySelector(selector)
+const $card = card => document.querySelector(`[data-card="${card}"]`)
 
 export function useTongitsGame() {
   const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
-
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
   const [toast, setToast] = useState(null)
@@ -45,29 +28,27 @@ export function useTongitsGame() {
   const [drawing, setDrawing] = useState(false)
   const [showDiscardHistory, setShowDiscardHistory] = useState(false)
   const [sortMenuOpen, setSortMenuOpen] = useState(false)
-  const [sortMode, setSortMode] = useState(null) // null | "suit" | "rank"
+  const [sortMode, setSortMode] = useState(null)
   const [newlyDrawnCard, setNewlyDrawnCard] = useState(null)
   const [activeDragId, setActiveDragId] = useState(null)
   const [presence, setPresence] = useState({})
   const [opponentLeft, setOpponentLeft] = useState(false)
+  const [activeEmote, setActiveEmote] = useState(null)
+  const [groups, setGroups] = useState([])
+  const [user, setUser] = useState(null)
 
   const hasLoadedRoomRef = useRef(false)
   const hadPlayer2Ref = useRef(false)
   const leavingRef = useRef(false)
   const prevOpponentStateRef = useRef("none")
-
-  /*
-   * TOAST NOTIFIER
-   */
-
+  const emoteSeenRef = useRef(null)
+  const lastEmoteSentRef = useRef(0)
+  const prevDiscardRef = useRef(null)
 
   function notify(text, type = "info") {
     setToast({ id: Date.now(), text, type })
   }
-
-  function warn(text) {
-    notify(text, "warn")
-  }
+  function warn(text) { notify(text, "warn") }
 
   useEffect(() => {
     if (!toast) return
@@ -84,62 +65,47 @@ export function useTongitsGame() {
     hasLoadedRoomRef.current = false
     leavingRef.current = false
     prevOpponentStateRef.current = "none"
+    emoteSeenRef.current = null
+    prevDiscardRef.current = null
     setOpponentLeft(false)
+    setGroups([])
   }, [roomCode])
 
-  const [user, setUser] = useState(null)
-
   useEffect(() => {
-    return onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser)
-    })
+    return onAuthStateChanged(auth, currentUser => setUser(currentUser))
   }, [])
 
   const opponentUid =
     room && user
-      ? room.player1 === user.uid
-        ? room.player2
-        : room.player1
+      ? room.player1 === user.uid ? room.player2 : room.player1
       : null
 
-  // none | left | online | offline
   const opponentState =
     !room || !opponentUid
       ? "none"
       : !presence[opponentUid]
         ? "left"
-        : presence[opponentUid].online
-          ? "online"
-          : "offline"
+        : presence[opponentUid].online ? "online" : "offline"
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { distance: 4 } })
   )
 
-  /*
-   * ROOM LISTENER
-   */
+  /* ROOM LISTENER */
   useEffect(() => {
-
     if (!roomCode) return
 
     const roomRef = ref(database, "rooms/" + roomCode)
 
     const unsubscribe = onValue(roomRef, snapshot => {
-
       const data = snapshot.val()
 
       if (!data) {
-
-        // I'm the one deleting it — no notice needed
         if (leavingRef.current) return
 
-        if (hasLoadedRoomRef.current) {
-          notify("The room was closed", "warn")
-        } else {
-          notify("That room no longer exists", "error")
-        }
+        if (hasLoadedRoomRef.current) notify("The room was closed", "warn")
+        else notify("That room no longer exists", "error")
 
         setMessage("")
         setRoomCode("")
@@ -151,13 +117,12 @@ export function useTongitsGame() {
         return
       }
 
+      if (!hasLoadedRoomRef.current) emoteSeenRef.current = data.emote?.ts || 0
       hasLoadedRoomRef.current = true
       setRoom(data)
       setPresence(data.presence || {})
 
-      if (data.game) {
-        setGame(data.game)
-      }
+      if (data.game) setGame(data.game)
 
       if (!data.player2) {
         hadPlayer2Ref.current = false
@@ -166,18 +131,37 @@ export function useTongitsGame() {
         hadPlayer2Ref.current = true
         setMessage("Player 2 joined!")
       }
-
     })
 
     return () => unsubscribe()
-
   }, [roomCode])
 
-  /*
-   * NOT A MEMBER OF THIS ROOM (stale code, or room taken)
-   */
+  /* EMOTES */
+  const emoteTs = room?.emote?.ts
   useEffect(() => {
+    const e = room?.emote
+    if (!e || emoteSeenRef.current === null || emoteTs === emoteSeenRef.current) return
 
+    emoteSeenRef.current = emoteTs
+    setActiveEmote(e)
+    const timer = setTimeout(() => setActiveEmote(null), 2500)
+    return () => clearTimeout(timer)
+  }, [emoteTs])
+
+  async function sendEmote(id) {
+    if (!roomCode || !user) return
+    if (Date.now() - lastEmoteSentRef.current < 1500) return
+    lastEmoteSentRef.current = Date.now()
+
+    await set(ref(database, "rooms/" + roomCode + "/emote"), {
+      from: user.uid,
+      id,
+      ts: Date.now()
+    })
+  }
+
+  /* NOT A MEMBER */
+  useEffect(() => {
     if (!room || !user || !roomCode) return
 
     if (room.player1 !== user.uid && room.player2 !== user.uid) {
@@ -191,12 +175,9 @@ export function useTongitsGame() {
       setRoom(null)
       setGame(null)
     }
-
   }, [room, user])
 
-  /*
-   * MY HAND
-   */
+  /* MY HAND */
   useEffect(() => {
     if (!roomCode || !user) return
 
@@ -206,14 +187,9 @@ export function useTongitsGame() {
       handRef,
       snapshot => {
         const raw = snapshot.val()
-
-        if (Array.isArray(raw)) {
-          setMyHand(raw)
-        } else if (raw && typeof raw === "object") {
-          setMyHand(Object.values(raw))
-        } else {
-          setMyHand([])
-        }
+        if (Array.isArray(raw)) setMyHand(raw)
+        else if (raw && typeof raw === "object") setMyHand(Object.values(raw))
+        else setMyHand([])
       },
       error => {
         console.error("HAND LISTENER ERROR", error)
@@ -224,51 +200,28 @@ export function useTongitsGame() {
     return () => unsubscribe()
   }, [roomCode, user])
 
-  /*
-   * PRESENCE — MARK MYSELF ONLINE
-   */
+  /* PRESENCE — online */
   useEffect(() => {
-
     if (!roomCode || !user) return
 
-    const myPresenceRef = ref(
-      database,
-      "rooms/" + roomCode + "/presence/" + user.uid
-    )
+    const myPresenceRef = ref(database, "rooms/" + roomCode + "/presence/" + user.uid)
 
     set(myPresenceRef, { online: true, lastSeen: serverTimestamp() })
-
-    onDisconnect(myPresenceRef).update({
-      online: false,
-      lastSeen: serverTimestamp()
-    })
-
+    onDisconnect(myPresenceRef).update({ online: false, lastSeen: serverTimestamp() })
   }, [roomCode, user])
 
-  /*
-   * PRESENCE — DELETE THE ROOM WHEN THE LAST PLAYER GOES
-   * If the opponent is not online (disconnected OR left), my
-   * disconnect also deletes the room. If they're online, stand down.
-   */
+  /* PRESENCE — delete room when last player goes */
   useEffect(() => {
-
     if (!roomCode || !user || !opponentUid) return
 
     const roomRef = ref(database, "rooms/" + roomCode)
 
-    if (opponentState === "online") {
-      onDisconnect(roomRef).cancel()
-    } else {
-      onDisconnect(roomRef).remove()
-    }
-
+    if (opponentState === "online") onDisconnect(roomRef).cancel()
+    else onDisconnect(roomRef).remove()
   }, [roomCode, user, opponentUid, opponentState])
 
-  /*
-   * PRESENCE — TELL ME WHAT THE OPPONENT DID
-   */
+  /* PRESENCE — notices */
   useEffect(() => {
-
     const prev = prevOpponentStateRef.current
 
     if (prev === "online" && opponentState === "left") {
@@ -280,44 +233,28 @@ export function useTongitsGame() {
       notify("Opponent is back", "info")
     }
 
-    if (opponentState === "online") {
-      setOpponentLeft(false)
-    }
+    if (opponentState === "online") setOpponentLeft(false)
 
     prevOpponentStateRef.current = opponentState
-
   }, [opponentState])
 
-  /*
-   * OPPONENT HAND (count for the table, full hand for end-of-game stats)
-   */
+  /* OPPONENT HAND */
   useEffect(() => {
-
     if (!roomCode || !opponentUid) return
 
-    const opponentHandRef = ref(
-      database,
-      "rooms/" + roomCode + "/hands/" + opponentUid
-    )
+    const opponentHandRef = ref(database, "rooms/" + roomCode + "/hands/" + opponentUid)
 
     const unsubscribe = onValue(opponentHandRef, snapshot => {
       const raw = snapshot.val()
-      if (Array.isArray(raw)) {
-        setOpponentHand(raw)
-      } else if (raw && typeof raw === "object") {
-        setOpponentHand(Object.values(raw))
-      } else {
-        setOpponentHand([])
-      }
+      if (Array.isArray(raw)) setOpponentHand(raw)
+      else if (raw && typeof raw === "object") setOpponentHand(Object.values(raw))
+      else setOpponentHand([])
     })
 
     return () => unsubscribe()
-
   }, [roomCode, opponentUid])
 
-  /*
-   * NEW GAME / REMATCH STARTED — reset local UI state
-   */
+  /* NEW GAME — reset local UI */
   const gameStatus = game?.status
 
   useEffect(() => {
@@ -325,49 +262,57 @@ export function useTongitsGame() {
       setSortMode(null)
       setSelectedCards([])
       setNewlyDrawnCard(null)
+      setGroups([])
     }
   }, [gameStatus])
 
-  /*
-   * CLEAR THE "NEW CARD" INDICATOR
-   */
   useEffect(() => {
-    if (newlyDrawnCard && !myHand.includes(newlyDrawnCard)) {
-      setNewlyDrawnCard(null)
-    }
+    if (newlyDrawnCard && !myHand.includes(newlyDrawnCard)) setNewlyDrawnCard(null)
   }, [myHand, newlyDrawnCard])
 
   useEffect(() => {
-    if (game && user && game.currentTurn !== user.uid) {
-      setNewlyDrawnCard(null)
-    }
+    if (game && user && game.currentTurn !== user.uid) setNewlyDrawnCard(null)
   }, [game && game.currentTurn, user])
 
-  /*
-   * LEAVE ROOM
-   * Deletes the room if the opponent isn't online (i.e. both players are gone).
-   */
-  async function leaveRoom() {
+  /* OPPONENT DISCARD / TAKE ANIMATION */
+  useEffect(() => {
+    if (!game) { prevDiscardRef.current = null; return }
 
+    const d = game.discard || []
+    const prev = prevDiscardRef.current
+    prevDiscardRef.current = d
+
+    if (!prev || !user || game.status !== "playing") return
+
+    if (d.length === prev.length + 1 && game.lastDiscarder !== user.uid) {
+      flyCard({
+        source: $(".opponent .card"),
+        getTarget: () => $('[data-fly="discard"]')
+      })
+    } else if (d.length === prev.length - 1 && game.currentTurn !== user.uid) {
+      flyCard({
+        source: $(".opponent .card"),
+        fromRect: $('[data-fly="discard"]')?.getBoundingClientRect(),
+        getTarget: () => $(".opponent .cards")
+      })
+    }
+  }, [game?.discard])
+
+  /* LEAVE ROOM */
+  async function leaveRoom() {
     if (!roomCode || !user) return
 
     leavingRef.current = true
 
-    const myPresenceRef = ref(
-      database,
-      "rooms/" + roomCode + "/presence/" + user.uid
-    )
+    const myPresenceRef = ref(database, "rooms/" + roomCode + "/presence/" + user.uid)
     const roomRef = ref(database, "rooms/" + roomCode)
 
     try {
       await onDisconnect(myPresenceRef).cancel()
       await onDisconnect(roomRef).cancel()
 
-      if (!opponentUid || opponentState !== "online") {
-        await remove(roomRef)
-      } else {
-        await remove(myPresenceRef)
-      }
+      if (!opponentUid || opponentState !== "online") await remove(roomRef)
+      else await remove(myPresenceRef)
     } catch (error) {
       console.error("LEAVE ERROR", error)
     }
@@ -379,16 +324,13 @@ export function useTongitsGame() {
     setOpponentHand([])
     setSelectedCards([])
     setSortMode(null)
+    setGroups([])
     setPresence({})
     setMessage("You left the room")
-
   }
 
-  /*
-   * CREATE ROOM
-   */
+  /* CREATE ROOM */
   async function createRoom() {
-
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
     const currentUser = auth.currentUser
 
@@ -398,26 +340,19 @@ export function useTongitsGame() {
     }
 
     try {
-
       await set(ref(database, "rooms/" + code), {
         player1: currentUser.uid,
         player2: null
       })
-
       setRoomCode(code)
       setMessage("Room created!")
-
     } catch (error) {
       notify(error.message, "error")
     }
-
   }
 
-  /*
-   * JOIN ROOM
-   */
+  /* JOIN ROOM */
   async function joinRoom() {
-
     const code = inputCode.trim().toUpperCase()
     const currentUser = auth.currentUser
 
@@ -425,14 +360,12 @@ export function useTongitsGame() {
       notify("Still connecting — try again in a moment", "error")
       return
     }
-
     if (!code) {
       notify("Enter a room code", "error")
       return
     }
 
     try {
-
       const roomRef = ref(database, "rooms/" + code)
       const snapshot = await get(roomRef)
 
@@ -471,22 +404,17 @@ export function useTongitsGame() {
       if (!roomData.game) {
         await startGame(code, roomData.player1, currentUser.uid)
       }
-
     } catch (error) {
       notify(error.message, "error")
     }
-
   }
 
-  /*
-   * START GAME (also used by an accepted rematch)
-   */
-  async function startGame(code, player1, player2) {
-
+  /* START GAME */
+  async function startGame(code, player1, player2, forcedStarter = null) {
     const deck = createDeck()
     shuffleDeck(deck)
 
-    const starter = Math.random() < 0.5 ? player1 : player2
+    const starter = forcedStarter || (Math.random() < 0.5 ? player1 : player2)
 
     let player1Hand
     let player2Hand
@@ -500,9 +428,9 @@ export function useTongitsGame() {
     }
 
     const gameData = {
-      deck: deck,
+      deck,
       discard: [],
-      starter: starter,
+      starter,
       currentTurn: starter,
       phase: "discard",
       hasDrawn: false,
@@ -521,17 +449,37 @@ export function useTongitsGame() {
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
     await remove(ref(database, "rooms/" + code + "/rematch"))
     await set(ref(database, "rooms/" + code + "/game"), gameData)
-
   }
 
-  /*
-   * Shared helpers
-   */
+  /* SHARED HELPERS */
+ function applyScores(updates, winner) {
+  const old = room?.scores || {}
+  const next = {}
+
+  for (const uid of [room.player1, room.player2]) {
+    const cur = {
+      wins: 0, losses: 0, ties: 0, streak: 0, loseStreak: 0,
+      ...(old[uid] || {})
+    }
+
+    if (winner === "tie") {
+      next[uid] = { ...cur, ties: cur.ties + 1, streak: 0, loseStreak: 0 }
+    } else if (winner === uid) {
+      next[uid] = { ...cur, wins: cur.wins + 1, streak: cur.streak + 1, loseStreak: 0 }
+    } else {
+      next[uid] = { ...cur, losses: cur.losses + 1, streak: 0, loseStreak: cur.loseStreak + 1 }
+    }
+  }
+
+  updates["scores"] = next
+}
+
   function applyWinIfEmpty(updates, newHand) {
     if (newHand.length === 0) {
       updates["game/status"] = "finished"
       updates["game/winner"] = user.uid
       updates["game/winReason"] = "emptyHand"
+      applyScores(updates, user.uid)
     }
   }
 
@@ -540,13 +488,38 @@ export function useTongitsGame() {
       getStat(game, user.uid, key) + amount
   }
 
-  /*
-   * CREATE MELD
-   */
+  /* GROUPS */
+  const activeGroups = groups
+    .map(g => g.filter(c => myHand.includes(c)))
+    .filter(g => g.length >= 3 && isValidMeld(g))
+
+  async function groupHand() {
+    const { groups: found, rest } = findBestMelds(myHand)
+
+    if (found.length === 0) {
+      warn("No melds found in your hand")
+      return
+    }
+
+    setSortMode(null)
+    setGroups(found)
+    await applySortedHand([...rest, ...found.flat()])
+    setMessage("Grouped " + found.length + " meld" + (found.length > 1 ? "s" : ""))
+  }
+
+  function addToHand(card) {
+    if (sortMode) return sortHandByMode([...myHand, card], sortMode)
+
+    const groupedSet = new Set(activeGroups.flat())
+    const firstGrouped = myHand.findIndex(c => groupedSet.has(c))
+
+    return firstGrouped === -1
+      ? [...myHand, card]
+      : [...myHand.slice(0, firstGrouped), card, ...myHand.slice(firstGrouped)]
+  }
+
+  /* CREATE MELD */
   async function createMeld() {
-
-
-
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -554,22 +527,18 @@ export function useTongitsGame() {
       setMessage("It's not your turn")
       return
     }
-
     if (game.phase !== "discard") {
       warn("Draw a card first")
       return
     }
-
     if (selectedCards.length < 3) {
       setMessage("Select at least 3 cards")
       return
     }
-
     if (!isValidMeld(selectedCards)) {
       setMessage("Those cards do not form a valid meld")
       return
     }
-
     if (game.mustMeld && !selectedCards.includes(game.mustMeld)) {
       setMessage("Your meld must include the card you took: " + game.mustMeld)
       return
@@ -594,20 +563,22 @@ export function useTongitsGame() {
     bump(updates, "cardsMelded", selectedCards.length)
     applyWinIfEmpty(updates, newHand)
 
+    selectedCards.forEach((c, i) =>
+      flyCard({
+        source: $card(c),
+        delay: i * 60,
+        getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
+      })
+    )
+
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setSelectedCards([])
     setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
-
   }
 
-  /*
-   * ADD CARD TO MELD (tap a glowing meld)
-   */
+  /* ADD TO MELD */
   async function addToMeld(meldId) {
-
-
-
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -615,12 +586,10 @@ export function useTongitsGame() {
       setMessage("It's not your turn")
       return
     }
-
     if (game.phase !== "discard") {
       setMessage("Draw a card from the pile first")
       return
     }
-
     if (selectedCards.length !== 1) {
       setMessage("Select one card to add")
       return
@@ -639,7 +608,6 @@ export function useTongitsGame() {
       setMessage("Meld not found")
       return
     }
-
     if (!canAddToMeld(meld, card)) {
       setMessage("That card cannot be added to this meld")
       return
@@ -660,42 +628,38 @@ export function useTongitsGame() {
       "game/melds": updatedMelds
     }
 
-    if (game.mustMeld === card) {
-      updates["game/mustMeld"] = null
-    }
+    if (game.mustMeld === card) updates["game/mustMeld"] = null
 
     bump(updates, "layoffs", 1)
     bump(updates, "cardsMelded", 1)
     applyWinIfEmpty(updates, newHand)
 
+    flyCard({
+      source: $card(card),
+      getTarget: () => $(`[data-meld-id="${meldId}"]`) || $(".meld-list")
+    })
+
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setSelectedCards([])
     setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card added to meld!")
-
   }
 
-  /*
-   * SELECT CARD
-   */
+  /* SELECT CARD */
   function toggleCard(card) {
     if (!game || !user) return
     if (game.status === "finished") return
     if (game.currentTurn !== user.uid) return
 
-    setSelectedCards(previous => {
-      if (previous.includes(card)) {
-        return previous.filter(item => item !== card)
-      }
-      return [...previous, card]
-    })
+    setSelectedCards(previous =>
+      previous.includes(card)
+        ? previous.filter(item => item !== card)
+        : [...previous, card]
+    )
   }
 
-  /*
-   * DISCARD
-   */
-  async function performDiscard(card) {
-
+  /* DISCARD */
+  async function performDiscard(card, fromRect) {
     if (game.mustMeld) {
       setMessage("You must use the card you took (" + game.mustMeld + ") in a meld first")
       return
@@ -726,11 +690,16 @@ export function useTongitsGame() {
       updates["game/hasDrawn"] = false
     }
 
+    flyCard({
+      source: $card(card),
+      fromRect,
+      getTarget: () => $('[data-fly="discard"]')
+    })
+
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setSelectedCards([])
     setMessage(newHand.length === 0 ? "You emptied your hand!" : "Card discarded")
-
   }
 
   async function discardSelected() {
@@ -741,12 +710,10 @@ export function useTongitsGame() {
       setMessage("It's not your turn")
       return
     }
-
     if (game.phase !== "discard") {
       setMessage("Draw a card from the pile first")
       return
     }
-
     if (selectedCards.length !== 1) {
       setMessage("Select one card to discard")
       return
@@ -755,11 +722,8 @@ export function useTongitsGame() {
     await performDiscard(selectedCards[0])
   }
 
-  /*
-   * END GAME BY LOWEST COUNT
-   */
+  /* END GAME BY LOWEST COUNT */
   async function endGameByLowestCount() {
-
     const handsSnapshot = await get(ref(database, "rooms/" + roomCode + "/hands"))
     const hands = handsSnapshot.val() || {}
 
@@ -767,34 +731,21 @@ export function useTongitsGame() {
     const p2Value = getHandValue(hands[room.player2] || [])
 
     let winner
+    if (p1Value < p2Value) winner = room.player1
+    else if (p2Value < p1Value) winner = room.player2
+    else winner = "tie"
 
-    if (p1Value < p2Value) {
-      winner = room.player1
-    } else if (p2Value < p1Value) {
-      winner = room.player2
-    } else {
-      winner = "tie"
-    }
-
-    await update(ref(database, "rooms/" + roomCode), {
+    const updates = {
       "game/status": "finished",
       "game/winner": winner,
       "game/winReason": "lowestCount"
-    })
+    }
+    applyScores(updates, winner)
 
+    await update(ref(database, "rooms/" + roomCode), updates)
   }
 
-  /*
-   * Put a new card into my hand — slotted into place if I've sorted
-   */
-  function addToHand(card) {
-    const next = [...myHand, card]
-    return sortMode ? sortHandByMode(next, sortMode) : next
-  }
-
-  /*
-   * DRAW
-   */
+  /* DRAW */
   async function drawCard() {
     if (!game || !user) return
     if (game.status === "finished") return
@@ -808,12 +759,10 @@ export function useTongitsGame() {
       setMessage("It's not your turn")
       return
     }
-
     if (game.phase !== "draw") {
       setMessage("You cannot draw right now")
       return
     }
-
     if (game.hasDrawn) {
       setMessage("You already drew this turn")
       return
@@ -842,9 +791,7 @@ export function useTongitsGame() {
     setTimeout(() => setDrawing(false), 500)
   }
 
-  /*
-   * TAKE THE OPPONENT'S DISCARD
-   */
+  /* TAKE DISCARD */
   const topDiscard = game?.discard?.length
     ? game.discard[game.discard.length - 1]
     : null
@@ -862,24 +809,20 @@ export function useTongitsGame() {
   )
 
   async function takeDiscard() {
-
     if (!game || !user || !topDiscard) return
 
     if (game.currentTurn !== user.uid) {
       warn("It's not your turn")
       return
     }
-
     if (game.phase !== "draw" || game.hasDrawn) {
       warn("You can only take a discard at the start of your turn")
       return
     }
-
     if (game.lastDiscarder === user.uid) {
       warn("You can't take your own discard")
       return
     }
-
     if (!canTakeDiscard) {
       warn("That card doesn't form a meld with your hand")
       return
@@ -899,17 +842,20 @@ export function useTongitsGame() {
 
     bump(updates, "takes", 1)
 
+    flyCard({
+      source: $('[data-fly="discard"]'),
+      getTarget: () => $card(card),
+      hideTarget: true
+    })
+
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setNewlyDrawnCard(card)
     setSelectedCards([card])
     setMessage("You took " + card)
-
   }
 
-  /*
-   * REMATCH — whoever presses first asks, the other confirms
-   */
+  /* REMATCH */
   async function requestRematch() {
     if (!roomCode || !user) return
 
@@ -922,28 +868,27 @@ export function useTongitsGame() {
   async function acceptRematch() {
     if (!roomCode || !room) return
 
-    await startGame(roomCode, room.player1, room.player2)
+    let loser = null
+    if (game?.winner && game.winner !== "tie") {
+      loser = game.winner === room.player1 ? room.player2 : room.player1
+    }
+
+    await startGame(roomCode, room.player1, room.player2, loser)
     setSelectedCards([])
     setMessage("Rematch started!")
   }
 
   async function declineRematch() {
     if (!roomCode) return
-
-    await update(ref(database, "rooms/" + roomCode + "/rematch"), {
-      status: "declined"
-    })
+    await update(ref(database, "rooms/" + roomCode + "/rematch"), { status: "declined" })
   }
 
   async function cancelRematch() {
     if (!roomCode) return
-
     await remove(ref(database, "rooms/" + roomCode + "/rematch"))
   }
 
-  /*
-   * DRAG
-   */
+  /* DRAG */
   function handleDragStart(event) {
     setActiveDragId(event.active.id)
   }
@@ -953,7 +898,6 @@ export function useTongitsGame() {
   }
 
   async function handleDragEnd(event) {
-
     setActiveDragId(null)
 
     const { active, over } = event
@@ -961,7 +905,6 @@ export function useTongitsGame() {
     if (!over) return
 
     if (over.id === "discard-zone") {
-
       if (!game || !user) return
       if (game.status === "finished") return
 
@@ -969,15 +912,13 @@ export function useTongitsGame() {
         setMessage("It's not your turn")
         return
       }
-
       if (game.phase !== "discard") {
         setMessage("Draw a card from the pile first")
         return
       }
 
-      await performDiscard(active.id)
+      await performDiscard(active.id, active.rect.current.translated)
       return
-
     }
 
     if (active.id === over.id) return
@@ -989,103 +930,73 @@ export function useTongitsGame() {
 
     const reordered = arrayMove(myHand, oldIndex, newIndex)
 
-    // A manual rearrangement means "stop auto-sorting"
     setSortMode(null)
+    setGroups([])
     setMyHand(reordered)
 
-    await set(
-      ref(database, "rooms/" + roomCode + "/hands/" + user.uid),
-      reordered
-    )
-
+    await set(ref(database, "rooms/" + roomCode + "/hands/" + user.uid), reordered)
   }
 
-  /*
-   * SORT HAND
-   */
+  /* SORT */
   async function applySortedHand(sorted) {
-
     setMyHand(sorted)
 
     if (roomCode && user) {
-      await set(
-        ref(database, "rooms/" + roomCode + "/hands/" + user.uid),
-        sorted
-      )
+      await set(ref(database, "rooms/" + roomCode + "/hands/" + user.uid), sorted)
     }
-
   }
 
   function sortHandBySuit() {
     setSortMode("suit")
+    setGroups([])
     applySortedHand(sortHandByMode(myHand, "suit"))
     setMessage("Hand sorted by suit")
   }
 
   function sortHandByRank() {
     setSortMode("rank")
+    setGroups([])
     applySortedHand(sortHandByMode(myHand, "rank"))
     setMessage("Hand sorted highest to lowest")
   }
 
   const isMyTurn = game && user && game.currentTurn === user.uid
 
+  const myScore = room?.scores?.[user?.uid] || {}
+  const oppScore = room?.scores?.[opponentUid] || {}
+  const scoreboard = {
+    me: myScore.wins || 0,
+    opp: oppScore.wins || 0,
+    myStreak: myScore.streak || 0
+  }
+
   const starterName =
     game && room
-      ? game.starter === room.player1
-        ? "Player 1"
-        : "Player 2"
+      ? game.starter === room.player1 ? "Player 1" : "Player 2"
       : ""
 
   const discardPile = game?.discard || []
 
   return {
-    roomCode,
-    inputCode,
-    setInputCode,
-    message,
-    toast,
+    roomCode, inputCode, setInputCode, message, toast,
     dismissToast: () => setToast(null),
-    room,
-    game,
-    myHand,
-    opponentHand,
+    room, game, myHand, opponentHand,
     opponentCount: opponentHand.length,
-    selectedCards,
-    setSelectedCards,
-    drawing,
-    showDiscardHistory,
-    setShowDiscardHistory,
-    sortMenuOpen,
-    setSortMenuOpen,
-    newlyDrawnCard,
+    selectedCards, setSelectedCards, drawing,
+    showDiscardHistory, setShowDiscardHistory,
+    sortMenuOpen, setSortMenuOpen, newlyDrawnCard,
     activeDragCard: activeDragId,
-    user,
-    sensors,
-    createRoom,
-    joinRoom,
-    createMeld,
-    addToMeld,
-    toggleCard,
-    discardSelected,
-    drawCard,
-    takeDiscard,
-    canTakeDiscard,
-    handleDragStart,
-    handleDragEnd,
-    handleDragCancel,
-    sortHandBySuit,
-    sortHandByRank,
+    user, sensors,
+    createRoom, joinRoom, createMeld, addToMeld, toggleCard,
+    discardSelected, drawCard, takeDiscard, canTakeDiscard,
+    handleDragStart, handleDragEnd, handleDragCancel,
+    sortHandBySuit, sortHandByRank,
     isMyTurn,
-    requestRematch,
-    acceptRematch,
-    declineRematch,
-    cancelRematch,
-    starterName,
-    discardPile,
-    leaveRoom,
-    opponentLeft,
-    opponentDisconnected: opponentState === "offline"
+    requestRematch, acceptRematch, declineRematch, cancelRematch,
+    starterName, discardPile, leaveRoom, opponentLeft,
+    opponentDisconnected: opponentState === "offline",
+    scoreboard,
+    activeEmote, sendEmote,
+    groups: activeGroups, groupHand
   }
-
 }

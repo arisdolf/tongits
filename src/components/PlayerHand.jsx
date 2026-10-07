@@ -1,42 +1,32 @@
-import {
-  SortableContext,
-  horizontalListSortingStrategy
-} from "@dnd-kit/sortable"
-
+import { Fragment } from "react"
+import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable"
 import SortableCard from "./SortableCard"
 import "../styles/Cards.css"
 import "../styles/PlayerHand.css"
 import "../styles/SortDropdown.css"
+
 function PlayerHand({
-  myHand,
-  selectedCards,
-  newlyDrawnCard,
-  onSelectCard,
-  sortMenuOpen,
-  setSortMenuOpen,
-  onSortBySuit,
-  onSortByRank,
-  isMyTurn,
-  phase,
-  onMeld,
-  onDiscard,
-  onClearSelection,
-  starterName,
-  hasStarter
+  myHand, selectedCards, newlyDrawnCard, onSelectCard,
+  sortMenuOpen, setSortMenuOpen, onSortBySuit, onSortByRank,
+  isMyTurn, phase, onMeld, onDiscard, onClearSelection,
+  starterName, hasStarter,
+  groups = [], onGroup
 }) {
+
+  const groupOf = {}
+  groups.forEach((g, gi) =>
+    g.forEach((c, ci) => { groupOf[c] = { gi, start: ci === 0 } })
+  )
+  const firstGroupedIndex = myHand.findIndex(c => groupOf[c])
 
   return (
     <div className="player player-mine">
 
       {sortMenuOpen && (
-        <div
-          className="dropdown-backdrop"
-          onClick={() => setSortMenuOpen(false)}
-        />
+        <div className="dropdown-backdrop" onClick={() => setSortMenuOpen(false)} />
       )}
 
       <div className="sort-dropdown">
-
         <button
           className="sort-toggle"
           onClick={() => setSortMenuOpen(open => !open)}
@@ -46,101 +36,57 @@ function PlayerHand({
         </button>
 
         {sortMenuOpen && (
-
           <div className="sort-menu">
-
-            <button
-              className="sort-menu-item"
-              onClick={() => {
-                onSortBySuit()
-                setSortMenuOpen(false)
-              }}
-            >
+            <button className="sort-menu-item"
+              onClick={() => { onSortBySuit(); setSortMenuOpen(false) }}>
               By Suit
             </button>
-
-            <button
-              className="sort-menu-item"
-              onClick={() => {
-                onSortByRank()
-                setSortMenuOpen(false)
-              }}
-            >
+            <button className="sort-menu-item"
+              onClick={() => { onSortByRank(); setSortMenuOpen(false) }}>
               High → Low
             </button>
-
           </div>
-
         )}
-
       </div>
 
-      <div className="player-name">
-        You
-      </div>
-      
-      <SortableContext
-        items={myHand}
-        strategy={horizontalListSortingStrategy}
-      >
+      <div className="player-name">You</div>
 
+      <SortableContext items={myHand} strategy={rectSortingStrategy}>
         <div className="cards my-hand">
-
           {myHand.map((card, index) => (
-  <SortableCard
-    key={card}
-    id={card}
-    card={card}
-    index={index}
-    selected={selectedCards.includes(card)}
-    isNew={card === newlyDrawnCard}
-    onSelect={onSelectCard}
-  />
-))}
-
+            <Fragment key={card}>
+              {index === firstGroupedIndex && index > 0 && <div className="hand-break" />}
+              <SortableCard
+                id={card}
+                card={card}
+                index={index}
+                selected={selectedCards.includes(card)}
+                isNew={card === newlyDrawnCard}
+                onSelect={onSelectCard}
+                groupIndex={groupOf[card]?.gi ?? -1}
+                groupStart={!!groupOf[card]?.start}
+              />
+            </Fragment>
+          ))}
         </div>
-
       </SortableContext>
 
-            <div className="hand-actions">
-
-        <button
-          onClick={onMeld}
-          
-        >
-          MELD
-        </button>
-
-        <button
-          onClick={onDiscard}
-        
-        >
-          DISCARD
-        </button>
-
-        <button
-          onClick={onClearSelection}
-          disabled={selectedCards.length === 0}
-        >
+      <div className="hand-actions">
+        <button onClick={onMeld}>MELD</button>
+        <button onClick={onGroup} disabled={myHand.length === 0}>GROUP</button>
+        <button onClick={onDiscard}>DISCARD</button>
+        <button onClick={onClearSelection} disabled={selectedCards.length === 0}>
           CLEAR
         </button>
-
       </div>
 
-    
-
       {selectedCards.length > 0 && (
-        <p className="selection-info">
-          Selected: {selectedCards.join(" ")}
-        </p>
+        <p className="selection-info">Selected: {selectedCards.join(" ")}</p>
       )}
 
       {hasStarter && (
-        <p className="starter-info">
-          {starterName} started with 13 cards
-        </p>
+        <p className="starter-info">{starterName} started with 13 cards</p>
       )}
-
     </div>
   )
 }

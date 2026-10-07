@@ -242,4 +242,7 @@
     .lobby input {
         padding: 8px;
     }
+    .hand-break { display: none; }
+.my-hand .card.group-start { margin-left: 6px; }
+
 }

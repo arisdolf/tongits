@@ -7,7 +7,8 @@ import {
 } from "@dnd-kit/core"
 
 import { useTongitsGame } from "./hooks/useTongitsGame"
-
+import EmoteBar, { EmoteContent } from "./components/EmoteBar"
+import { getEmote } from "./utils/emotes"
 
 
 import Lobby from "./components/Lobby"
@@ -31,7 +32,7 @@ function collisionDetection(args) {
 //test run
 function App() {
 
-  
+
   const g = useTongitsGame()
 
   if (!g.roomCode) {
@@ -56,10 +57,23 @@ function App() {
         <div className="top-bar">
           <strong>TONGITS</strong>
           <span>ROOM {g.roomCode}</span>
+          <span>
+            YOU {g.scoreboard.me} – {g.scoreboard.opp} OPP
+            {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
+          </span>
+          <EmoteBar onSend={g.sendEmote} />
           <button className="leave-button" onClick={g.leaveRoom}>
             LEAVE
           </button>
         </div>
+        {g.activeEmote && getEmote(g.activeEmote.id) && (
+          <div
+            key={g.activeEmote.ts}
+            className={"emote-bubble " + (g.activeEmote.from === g.user?.uid ? "emote-mine" : "emote-opp")}
+          >
+            <EmoteContent emote={getEmote(g.activeEmote.id)} />
+          </div>
+        )}
 
         <DndContext
           sensors={g.sensors}
@@ -114,17 +128,19 @@ function App() {
                 onTakeDiscard={g.takeDiscard}
               />
 
-                            <div className="turn-message">
+              <div className="turn-message">
                 {g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
               </div>
 
-              
-              
+
+
 
             </div>
 
             <div className="zone zone-hand">
               <PlayerHand
+              groups={g.groups}
+onGroup={g.groupHand}
                 myHand={g.myHand}
                 selectedCards={g.selectedCards}
                 newlyDrawnCard={g.newlyDrawnCard}

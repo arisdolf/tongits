@@ -131,3 +131,19 @@
   padding: 10px 0 14px;
   background: #2a1013;
 }
+
+.win-score { font-weight: bold; letter-spacing: 1px; margin-bottom: 8px; color: #f3dfa0; }
+
+.streak-banner {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255, 122, 69, 0.18);
+  border: 1px solid #ff7a45;
+  color: #ffb199; font-weight: bold; font-size: 13px;
+}
+.streak-banner.opp { background: rgba(255,255,255,0.08); border-color: #6e3640; color: #e0c4c4; }
+
+.win-panel button.music-toggle {
+  padding: 2px 8px; background: transparent; color: inherit; font-size: 14px;
+}

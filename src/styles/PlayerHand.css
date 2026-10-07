@@ -210,3 +210,27 @@
     margin: 2px -6px;
   }
 }
+.new-badge {
+  top: -10px;
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.hand-break { flex-basis: 100%; height: 0; }
+
+.grouped-card .card-face::after {
+  content: "";
+  position: absolute;
+  left: 4px; right: 4px; bottom: -6px;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--group-color);
+  pointer-events: none;
+}
+.group-0 { --group-color: #4fd67a; }
+.group-1 { --group-color: #6fb1ff; }
+.group-2 { --group-color: #e6c35c; }
+.group-3 { --group-color: #ff9a85; }
+
+.my-hand .card.group-start { margin-left: 14px; }

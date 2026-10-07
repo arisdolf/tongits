@@ -1,9 +1,12 @@
 {
+  
   "name": "tongits",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "lan": "vite --host --mode lan",
+"emulators": "firebase emulators:start --project tongits-19bc2",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
