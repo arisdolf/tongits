@@ -3,9 +3,16 @@ import { database, auth } from "../firebase"
 import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp } from "firebase/database"
 import { onAuthStateChanged } from "firebase/auth"
 import {
-  getHandValue, createDeck, shuffleDeck, isValidMeld, canAddToMeld,
-  canCardGoOnAnyMeld, canFormMeldWithCard, sortMeldCards,
-  sortHandByMode, mergeMelds
+  getHandValue,
+  createDeck,
+  shuffleDeck,
+  isValidMeld,
+  canAddToMeld,
+  canCardGoOnAnyMeld,
+  canFormMeldWithCard,
+  sortMeldCards,
+  sortHandByMode,
+  mergeMelds
 } from "../utils/cardUtils"
 import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
