@@ -13,6 +13,7 @@ export function flyCard({
   ghost.innerHTML = source.innerHTML
   ghost.querySelectorAll("*").forEach(n => { n.style.animation = "none" })
   ghost.querySelectorAll(".new-badge").forEach(n => n.remove())
+  ghost.querySelectorAll(".new-badge, .deck-count").forEach(n => n.remove())
 
   Object.assign(ghost.style, {
     position: "fixed",

@@ -27,7 +27,9 @@ import "./styles/LandScape.css" // keep last so it overrides
 // Prefer whatever is under the pointer (discard pile), else nearest card
 function collisionDetection(args) {
   const hits = pointerWithin(args)
-  return hits.length ? hits : closestCenter(args)
+  if (!hits.length) return closestCenter(args)
+  const specific = hits.filter(h => h.id !== "new-meld")
+  return specific.length ? specific : hits
 }
 //test run
 function App() {
@@ -139,8 +141,9 @@ function App() {
 
             <div className="zone zone-hand">
               <PlayerHand
-              groups={g.groups}
-onGroup={g.groupHand}
+                onUngroup={g.ungroupSelected}
+                groups={g.groups}
+                onGroup={g.groupHand}
                 myHand={g.myHand}
                 selectedCards={g.selectedCards}
                 newlyDrawnCard={g.newlyDrawnCard}
@@ -173,6 +176,13 @@ onGroup={g.groupHand}
           )}
 
         </DndContext>
+          <div className="hand-actions">
+  <button onClick={onMeld}>MELD</button>
+  <button onClick={onGroup} disabled={selectedCards.length < 2}>GROUP</button>
+  <button onClick={onUngroup} disabled={groups.length === 0}>UNGROUP</button>
+  <button onClick={onDiscard}>DISCARD</button>
+  <button onClick={onClearSelection} disabled={selectedCards.length === 0}>CLEAR</button>
+</div>
 
         <p className="message">{g.message}</p>
 

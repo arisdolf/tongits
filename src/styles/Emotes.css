@@ -31,7 +31,13 @@
 }
 
 .emote-item img { width: 32px; height: 32px; object-fit: contain; }
-
+.emote-panel {
+  grid-template-columns: repeat(3, 1fr);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.emote-item img { width: 52px; height: 52px; }
+.emote-bubble img { width: 110px; height: 110px; }
 .emote-bubble {
   position: absolute;
   z-index: 60;

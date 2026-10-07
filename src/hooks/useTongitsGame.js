@@ -36,7 +36,7 @@ export function useTongitsGame() {
   const [activeEmote, setActiveEmote] = useState(null)
   const [groups, setGroups] = useState([])
   const [user, setUser] = useState(null)
-
+  const prevDeckLenRef = useRef(null)
   const hasLoadedRoomRef = useRef(false)
   const hadPlayer2Ref = useRef(false)
   const leavingRef = useRef(false)
@@ -62,6 +62,7 @@ export function useTongitsGame() {
   }, [roomCode])
 
   useEffect(() => {
+    prevDeckLenRef.current = null
     hasLoadedRoomRef.current = false
     leavingRef.current = false
     prevOpponentStateRef.current = "none"
@@ -298,6 +299,24 @@ export function useTongitsGame() {
     }
   }, [game?.discard])
 
+  /* OPPONENT DRAW ANIMATION */
+useEffect(() => {
+  if (!game) { prevDeckLenRef.current = null; return }
+
+  const len = game.deck?.length ?? 0
+  const prev = prevDeckLenRef.current
+  prevDeckLenRef.current = len
+
+  if (prev === null || !user || game.status !== "playing") return
+
+  if (len === prev - 1 && game.currentTurn !== user.uid) {
+    flyCard({
+      source: $('[data-fly="deck"]'),
+      getTarget: () => $(".opponent .cards")
+    })
+  }
+}, [game?.deck?.length])
+
   /* LEAVE ROOM */
   async function leaveRoom() {
     if (!roomCode || !user) return
@@ -519,7 +538,8 @@ export function useTongitsGame() {
   }
 
   /* CREATE MELD */
-  async function createMeld() {
+ async function createMeld(cardsOverride) {
+  const cards = Array.isArray(cardsOverride) ? cardsOverride : selectedCards
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -578,7 +598,9 @@ export function useTongitsGame() {
   }
 
   /* ADD TO MELD */
-  async function addToMeld(meldId) {
+ async function addToMeld(meldId, cardArg) {
+
+  
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -594,8 +616,11 @@ export function useTongitsGame() {
       setMessage("Select one card to add")
       return
     }
-
-    const card = selectedCards[0]
+    if (!cardArg && selectedCards.length !== 1) {
+    setMessage("Select one card to add")
+    return
+  }
+    const card = cardArg || selectedCards[0]
 
     if (game.mustMeld && card !== game.mustMeld) {
       setMessage("Use the card you took first: " + game.mustMeld)
@@ -603,7 +628,7 @@ export function useTongitsGame() {
     }
 
     const meld = (game.melds || []).find(item => item.id === meldId)
-
+    
     if (!meld) {
       setMessage("Meld not found")
       return
@@ -649,7 +674,7 @@ export function useTongitsGame() {
   function toggleCard(card) {
     if (!game || !user) return
     if (game.status === "finished") return
-    if (game.currentTurn !== user.uid) return
+    
 
     setSelectedCards(previous =>
       previous.includes(card)
@@ -782,7 +807,11 @@ export function useTongitsGame() {
     }
 
     bump(updates, "draws", 1)
-
+    flyCard({
+  source: $('[data-fly="deck"]'),
+  getTarget: () => $card(card),
+  hideTarget: true
+})
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setNewlyDrawnCard(card)
@@ -920,7 +949,17 @@ export function useTongitsGame() {
       await performDiscard(active.id, active.rect.current.translated)
       return
     }
-
+    if (String(over.id).startsWith("meld:")) {
+  await addToMeld(String(over.id).slice(5), active.id)
+  return
+}
+if (over.id === "new-meld") {
+  const cards = selectedCards.includes(active.id)
+    ? selectedCards
+    : [...selectedCards, active.id]
+  await createMeld(cards)
+  return
+}
     if (active.id === over.id) return
 
     const oldIndex = myHand.indexOf(active.id)

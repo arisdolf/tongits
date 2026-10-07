@@ -127,60 +127,46 @@ export function createDeck() {
 
 }
 
-export function findBestMelds(hand) {
-  const cands = []
+/* GROUPS (manual — whatever the player selected) */
+const activeGroups = groups
+  .map(g => g.filter(c => myHand.includes(c)))
+  .filter(g => g.length >= 2)
 
-  // sets (3 or 4 of a kind)
-  const byValue = {}
-  hand.forEach(c => (byValue[getCardValue(c)] ||= []).push(c))
-  for (const cards of Object.values(byValue)) {
-    if (cards.length < 3) continue
-    cands.push(cards)
-    if (cards.length === 4) {
-      for (let skip = 0; skip < 4; skip++) {
-        cands.push(cards.filter((_, i) => i !== skip))
-      }
-    }
+async function groupHand() {
+  if (selectedCards.length < 2) {
+    warn("Select 2 or more cards to group")
+    return
   }
 
-  // runs (same suit, consecutive, 3+)
-  const bySuit = {}
-  hand.forEach(c => (bySuit[getCardSuit(c)] ||= []).push(c))
-  for (const cards of Object.values(bySuit)) {
-    const s = [...cards].sort((a, b) => getCardValue(a) - getCardValue(b))
-    for (let i = 0; i < s.length; i++) {
-      for (let j = i + 2; j < s.length; j++) {
-        const slice = s.slice(i, j + 1)
-        if (getCardValue(slice[slice.length - 1]) - getCardValue(slice[0]) === slice.length - 1) {
-          cands.push(slice)
-        }
-      }
-    }
+  const picked = myHand.filter(c => selectedCards.includes(c))
+
+  const kept = activeGroups
+    .map(g => g.filter(c => !picked.includes(c)))
+    .filter(g => g.length >= 2)
+
+  const next = [...kept, picked]
+  const grouped = new Set(next.flat())
+  const rest = myHand.filter(c => !grouped.has(c))
+
+  setSortMode(null)
+  setGroups(next)
+  setSelectedCards([])
+  await applySortedHand([...rest, ...next.flat()])
+  setMessage("Cards grouped")
+}
+
+function ungroupSelected() {
+  if (selectedCards.length === 0) {
+    setGroups([])
+    setMessage("Groups cleared")
+    return
   }
-
-  // pick the disjoint combination that gets rid of the most points
-  let best = { score: 0, picks: [] }
-
-  function dfs(start, used, picks, score) {
-    if (score > best.score) best = { score, picks: [...picks] }
-    for (let i = start; i < cands.length; i++) {
-      const m = cands[i]
-      if (m.some(c => used.has(c))) continue
-      m.forEach(c => used.add(c))
-      picks.push(m)
-      dfs(i + 1, used, picks, score + getHandValue(m))
-      picks.pop()
-      m.forEach(c => used.delete(c))
-    }
-  }
-
-  dfs(0, new Set(), [], 0)
-
-  const grouped = new Set(best.picks.flat())
-  return {
-    groups: best.picks.map(sortMeldCards),
-    rest: hand.filter(c => !grouped.has(c))
-  }
+  setGroups(
+    activeGroups
+      .map(g => g.filter(c => !selectedCards.includes(c)))
+      .filter(g => g.length >= 2)
+  )
+  setSelectedCards([])
 }
 
 

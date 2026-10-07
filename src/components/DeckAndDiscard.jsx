@@ -24,6 +24,7 @@ function DeckAndDiscard({
           className={"deck " + (drawing ? "deck-drawing" : "")}
           onClick={onDraw}
           disabled={!canDraw}
+          data-fly="deck"
         >
           <CardBack className="deck-back" />
           <span className="deck-count">{deckCount}</span>
