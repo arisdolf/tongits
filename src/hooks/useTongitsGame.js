@@ -5,7 +5,7 @@ import { onAuthStateChanged } from "firebase/auth"
 import {
   getHandValue, createDeck, shuffleDeck, isValidMeld, canAddToMeld,
   canCardGoOnAnyMeld, canFormMeldWithCard, sortMeldCards,
-  sortHandByMode, mergeMelds, findBestMelds
+  sortHandByMode, mergeMelds
 } from "../utils/cardUtils"
 import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
