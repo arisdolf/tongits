@@ -127,47 +127,6 @@ export function createDeck() {
 
 }
 
-/* GROUPS (manual — whatever the player selected) */
-const activeGroups = groups
-  .map(g => g.filter(c => myHand.includes(c)))
-  .filter(g => g.length >= 2)
-
-async function groupHand() {
-  if (selectedCards.length < 2) {
-    warn("Select 2 or more cards to group")
-    return
-  }
-
-  const picked = myHand.filter(c => selectedCards.includes(c))
-
-  const kept = activeGroups
-    .map(g => g.filter(c => !picked.includes(c)))
-    .filter(g => g.length >= 2)
-
-  const next = [...kept, picked]
-  const grouped = new Set(next.flat())
-  const rest = myHand.filter(c => !grouped.has(c))
-
-  setSortMode(null)
-  setGroups(next)
-  setSelectedCards([])
-  await applySortedHand([...rest, ...next.flat()])
-  setMessage("Cards grouped")
-}
-
-function ungroupSelected() {
-  if (selectedCards.length === 0) {
-    setGroups([])
-    setMessage("Groups cleared")
-    return
-  }
-  setGroups(
-    activeGroups
-      .map(g => g.filter(c => !selectedCards.includes(c)))
-      .filter(g => g.length >= 2)
-  )
-  setSelectedCards([])
-}
 
 
 /*

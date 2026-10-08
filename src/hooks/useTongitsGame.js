@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { database, auth } from "../firebase"
-import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp } from "firebase/database"
+import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp, push, query, limitToLast } from "firebase/database"
 import { onAuthStateChanged } from "firebase/auth"
 import {
   getHandValue,
@@ -23,6 +23,12 @@ const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 
 export function useTongitsGame() {
+  const [chatMessages, setChatMessages] = useState([])
+const [chatOpen, setChatOpen] = useState(false)
+const [unread, setUnread] = useState(0)
+const chatOpenRef = useRef(false)
+const chatIdsRef = useRef(null)      // null until the first snapshot arrives
+const lastChatSentRef = useRef(0)
   const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
@@ -167,6 +173,52 @@ export function useTongitsGame() {
       ts: Date.now()
     })
   }
+
+  /* CHAT */
+useEffect(() => {
+  chatOpenRef.current = chatOpen
+  if (chatOpen) setUnread(0)
+}, [chatOpen])
+
+useEffect(() => {
+  if (!roomCode) return
+
+  setChatMessages([])
+  setUnread(0)
+  chatIdsRef.current = null
+
+  const chatQuery = query(ref(database, "rooms/" + roomCode + "/chat"), limitToLast(50))
+
+  const unsubscribe = onValue(chatQuery, snapshot => {
+    const list = []
+    snapshot.forEach(child => { list.push({ id: child.key, ...child.val() }) })
+    setChatMessages(list)
+
+    const prev = chatIdsRef.current
+    chatIdsRef.current = new Set(list.map(m => m.id))
+
+    // don't count history on first load, or messages while the panel is open
+    if (prev === null || chatOpenRef.current) return
+
+    const fresh = list.filter(m => !prev.has(m.id) && m.from !== auth.currentUser?.uid)
+    if (fresh.length) setUnread(n => n + fresh.length)
+  })
+
+  return () => unsubscribe()
+}, [roomCode])
+
+async function sendChat(text) {
+  const clean = text.trim().slice(0, 200)
+  if (!clean || !roomCode || !user) return
+  if (Date.now() - lastChatSentRef.current < 500) return
+  lastChatSentRef.current = Date.now()
+
+  await push(ref(database, "rooms/" + roomCode + "/chat"), {
+    from: user.uid,
+    text: clean,
+    ts: Date.now()
+  })
+}
 
   /* NOT A MEMBER */
   useEffect(() => {
@@ -514,95 +566,110 @@ useEffect(() => {
       getStat(game, user.uid, key) + amount
   }
 
-  /* GROUPS */
-  const activeGroups = groups
-    .map(g => g.filter(c => myHand.includes(c)))
-    .filter(g => g.length >= 3 && isValidMeld(g))
+ /* GROUPS (manual: whatever the player selected) */
+const activeGroups = groups
+  .map(g => g.filter(c => myHand.includes(c)))
+  .filter(g => g.length >= 2)
 
-  async function groupHand() {
-    const { groups: found, rest } = findBestMelds(myHand)
-
-    if (found.length === 0) {
-      warn("No melds found in your hand")
-      return
-    }
-
-    setSortMode(null)
-    setGroups(found)
-    await applySortedHand([...rest, ...found.flat()])
-    setMessage("Grouped " + found.length + " meld" + (found.length > 1 ? "s" : ""))
+async function groupHand() {
+  if (selectedCards.length < 2) {
+    warn("Select 2 or more cards to group")
+    return
   }
 
-  function addToHand(card) {
-    if (sortMode) return sortHandByMode([...myHand, card], sortMode)
+  const picked = myHand.filter(c => selectedCards.includes(c))
 
-    const groupedSet = new Set(activeGroups.flat())
-    const firstGrouped = myHand.findIndex(c => groupedSet.has(c))
+  // remove picked cards from any existing group, drop groups that shrink below 2
+  const kept = activeGroups
+    .map(g => g.filter(c => !picked.includes(c)))
+    .filter(g => g.length >= 2)
 
-    return firstGrouped === -1
-      ? [...myHand, card]
-      : [...myHand.slice(0, firstGrouped), card, ...myHand.slice(firstGrouped)]
+  const next = [...kept, picked]
+  const grouped = new Set(next.flat())
+  const rest = myHand.filter(c => !grouped.has(c))
+
+  setSortMode(null)
+  setGroups(next)
+  setSelectedCards([])
+  await applySortedHand([...rest, ...next.flat()])
+  setMessage("Cards grouped")
+}
+
+function ungroupSelected() {
+  if (selectedCards.length === 0) {
+    setGroups([])
+    setMessage("Groups cleared")
+    return
   }
+  setGroups(
+    activeGroups
+      .map(g => g.filter(c => !selectedCards.includes(c)))
+      .filter(g => g.length >= 2)
+  )
+  setSelectedCards([])
+}
 
   /* CREATE MELD */
- async function createMeld(cardsOverride) {
+async function createMeld(cardsOverride) {
+  // a drag passes its own card list; the MELD button passes a click event, so ignore that
   const cards = Array.isArray(cardsOverride) ? cardsOverride : selectedCards
-    if (!game || !user) return
-    if (game.status === "finished") return
 
-    if (game.currentTurn !== user.uid) {
-      setMessage("It's not your turn")
-      return
-    }
-    if (game.phase !== "discard") {
-      warn("Draw a card first")
-      return
-    }
-    if (selectedCards.length < 3) {
-      setMessage("Select at least 3 cards")
-      return
-    }
-    if (!isValidMeld(selectedCards)) {
-      setMessage("Those cards do not form a valid meld")
-      return
-    }
-    if (game.mustMeld && !selectedCards.includes(game.mustMeld)) {
-      setMessage("Your meld must include the card you took: " + game.mustMeld)
-      return
-    }
+  if (!game || !user) return
+  if (game.status === "finished") return
 
-    const newMeld = {
-      id: Date.now().toString(),
-      owner: user.uid,
-      cards: sortMeldCards(selectedCards)
-    }
-
-    const newHand = myHand.filter(card => !selectedCards.includes(card))
-    const updatedMelds = mergeMelds([...(game.melds || []), newMeld])
-
-    const updates = {
-      ["hands/" + user.uid]: newHand,
-      "game/melds": updatedMelds,
-      "game/mustMeld": null
-    }
-
-    bump(updates, "melds", 1)
-    bump(updates, "cardsMelded", selectedCards.length)
-    applyWinIfEmpty(updates, newHand)
-
-    selectedCards.forEach((c, i) =>
-      flyCard({
-        source: $card(c),
-        delay: i * 60,
-        getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
-      })
-    )
-
-    await update(ref(database, "rooms/" + roomCode), updates)
-
-    setSelectedCards([])
-    setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
+  if (game.currentTurn !== user.uid) {
+    setMessage("It's not your turn")
+    return
   }
+  if (game.phase !== "discard") {
+    warn("Draw a card first")
+    return
+  }
+  if (cards.length < 3) {
+    setMessage("Select at least 3 cards")
+    return
+  }
+  if (!isValidMeld(cards)) {
+    setMessage("Those cards do not form a valid meld")
+    return
+  }
+  if (game.mustMeld && !cards.includes(game.mustMeld)) {
+    setMessage("Your meld must include the card you took: " + game.mustMeld)
+    return
+  }
+
+  const newMeld = {
+    id: Date.now().toString(),
+    owner: user.uid,
+    cards: sortMeldCards(cards)
+  }
+
+  const newHand = myHand.filter(card => !cards.includes(card))
+  const updatedMelds = mergeMelds([...(game.melds || []), newMeld])
+
+  const updates = {
+    ["hands/" + user.uid]: newHand,
+    "game/melds": updatedMelds,
+    "game/mustMeld": null
+  }
+
+  bump(updates, "melds", 1)
+  bump(updates, "cardsMelded", cards.length)
+  applyWinIfEmpty(updates, newHand)
+
+  cards.forEach((c, i) =>
+    flyCard({
+      source: $card(c),
+      delay: i * 60,
+      getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
+    })
+  )
+
+  await update(ref(database, "rooms/" + roomCode), updates)
+
+  setSelectedCards([])
+  setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
+}
 
   /* ADD TO MELD */
  async function addToMeld(meldId, cardArg) {
@@ -619,10 +686,7 @@ useEffect(() => {
       setMessage("Draw a card from the pile first")
       return
     }
-    if (selectedCards.length !== 1) {
-      setMessage("Select one card to add")
-      return
-    }
+    
     if (!cardArg && selectedCards.length !== 1) {
     setMessage("Select one card to add")
     return
@@ -1043,6 +1107,7 @@ if (over.id === "new-meld") {
     opponentDisconnected: opponentState === "offline",
     scoreboard,
     activeEmote, sendEmote,
-    groups: activeGroups, groupHand
+    groups: activeGroups, groupHand, ungroupSelected,
+    chatMessages, chatOpen, setChatOpen, unread, sendChat
   }
 }

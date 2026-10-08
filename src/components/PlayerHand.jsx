@@ -10,7 +10,7 @@ function PlayerHand({
   sortMenuOpen, setSortMenuOpen, onSortBySuit, onSortByRank,
   isMyTurn, phase, onMeld, onDiscard, onClearSelection,
   starterName, hasStarter,
-  groups = [], onGroup
+  groups = [], onGroup, onUngroup
 }) {
 
   const groupOf = {}
@@ -72,13 +72,12 @@ function PlayerHand({
       </SortableContext>
 
       <div className="hand-actions">
-        <button onClick={onMeld}>MELD</button>
-        <button onClick={onGroup} disabled={myHand.length === 0}>GROUP</button>
-        <button onClick={onDiscard}>DISCARD</button>
-        <button onClick={onClearSelection} disabled={selectedCards.length === 0}>
-          CLEAR
-        </button>
-      </div>
+  <button onClick={onMeld}>MELD</button>
+  <button onClick={onGroup} disabled={selectedCards.length < 2}>GROUP</button>
+  <button onClick={onUngroup} disabled={groups.length === 0}>UNGROUP</button>
+  <button onClick={onDiscard}>DISCARD</button>
+  <button onClick={onClearSelection} disabled={selectedCards.length === 0}>CLEAR</button>
+</div>
 
       {selectedCards.length > 0 && (
         <p className="selection-info">Selected: {selectedCards.join(" ")}</p>

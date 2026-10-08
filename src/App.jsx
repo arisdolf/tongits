@@ -9,7 +9,7 @@ import {
 import { useTongitsGame } from "./hooks/useTongitsGame"
 import EmoteBar, { EmoteContent } from "./components/EmoteBar"
 import { getEmote } from "./utils/emotes"
-
+import ChatBox from "./components/ChatBox"
 
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
@@ -64,6 +64,14 @@ function App() {
             {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
           </span>
           <EmoteBar onSend={g.sendEmote} />
+          <ChatBox
+  messages={g.chatMessages}
+  myUid={g.user?.uid}
+  open={g.chatOpen}
+  onToggle={() => g.setChatOpen(o => !o)}
+  unread={g.unread}
+  onSend={g.sendChat}
+/>
           <button className="leave-button" onClick={g.leaveRoom}>
             LEAVE
           </button>
@@ -176,13 +184,7 @@ function App() {
           )}
 
         </DndContext>
-          <div className="hand-actions">
-  <button onClick={onMeld}>MELD</button>
-  <button onClick={onGroup} disabled={selectedCards.length < 2}>GROUP</button>
-  <button onClick={onUngroup} disabled={groups.length === 0}>UNGROUP</button>
-  <button onClick={onDiscard}>DISCARD</button>
-  <button onClick={onClearSelection} disabled={selectedCards.length === 0}>CLEAR</button>
-</div>
+         
 
         <p className="message">{g.message}</p>
 
