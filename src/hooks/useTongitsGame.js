@@ -200,8 +200,12 @@ useEffect(() => {
     // don't count history on first load, or messages while the panel is open
     if (prev === null || chatOpenRef.current) return
 
-    const fresh = list.filter(m => !prev.has(m.id) && m.from !== auth.currentUser?.uid)
-    if (fresh.length) setUnread(n => n + fresh.length)
+   const fresh = list.filter(m => !prev.has(m.id) && m.from !== auth.currentUser?.uid)
+if (fresh.length) {
+  setUnread(n => n + fresh.length)
+  const last = fresh[fresh.length - 1]
+  notify("💬 " + last.text.slice(0, 60), "info")
+}
   })
 
   return () => unsubscribe()

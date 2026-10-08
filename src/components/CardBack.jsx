@@ -9,11 +9,7 @@ function CardBack({ className = "" }) {
         backgroundSize: "cover",
         backgroundPosition: "center"
       }}
-    >
-      <div className="card-back-frame">
-        <div className="card-back-emblem">T</div>
-      </div>
-    </div>
+    />
   )
 }
 

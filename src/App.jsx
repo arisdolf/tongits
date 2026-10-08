@@ -56,26 +56,30 @@ function App() {
     <div className="game">
       <div className="table">
 
-        <div className="top-bar">
-          <strong>TONGITS</strong>
-          <span>ROOM {g.roomCode}</span>
-          <span>
-            YOU {g.scoreboard.me} – {g.scoreboard.opp} OPP
-            {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
-          </span>
-          <EmoteBar onSend={g.sendEmote} />
-          <ChatBox
-  messages={g.chatMessages}
-  myUid={g.user?.uid}
-  open={g.chatOpen}
-  onToggle={() => g.setChatOpen(o => !o)}
-  unread={g.unread}
-  onSend={g.sendChat}
-/>
-          <button className="leave-button" onClick={g.leaveRoom}>
-            LEAVE
-          </button>
-        </div>
+       <div className="top-bar">
+  <div className="top-brand">
+    <strong>TONGITS</strong>
+    <span className="top-score">
+      YOU {g.scoreboard.me} – {g.scoreboard.opp} OPP
+      {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
+    </span>
+  </div>
+
+  <span>ROOM {g.roomCode}</span>
+
+  <div className="top-actions">
+    <EmoteBar onSend={g.sendEmote} />
+    <ChatBox
+      messages={g.chatMessages}
+      myUid={g.user?.uid}
+      open={g.chatOpen}
+      onToggle={() => g.setChatOpen(o => !o)}
+      unread={g.unread}
+      onSend={g.sendChat}
+    />
+    <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
+  </div>
+</div>
         {g.activeEmote && getEmote(g.activeEmote.id) && (
           <div
             key={g.activeEmote.ts}
@@ -184,7 +188,7 @@ function App() {
           )}
 
         </DndContext>
-         
+
 
         <p className="message">{g.message}</p>
 
