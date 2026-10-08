@@ -42,6 +42,9 @@
   "@dnd-kit/utilities": "^3.2.2",
   
     
+  "@vercel/analytics": "^2.0.1",
+  
+    
   "firebase": "^9.14.0",
   
     
