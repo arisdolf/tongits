@@ -79,6 +79,7 @@ function App() {
       onToggle={() => g.setChatOpen(o => !o)}
       unread={g.unread}
       onSend={g.sendChat}
+      opponentName={g.opponentName}
     />
     <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
   </div>
