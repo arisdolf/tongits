@@ -433,7 +433,8 @@ export function useTongitsGame() {
     try {
       await set(ref(database, "rooms/" + code), {
         player1: currentUser.uid,
-        player2: null
+        player2: null,
+        names: { [currentUser.uid]: cleanName() }
       })
       setRoomCode(code)
       setMessage("Room created!")
@@ -488,12 +489,10 @@ export function useTongitsGame() {
         return
       }
 
-      await set(ref(database, "rooms/" + code + "/player2"), currentUser.uid)
-      await set(ref(database, "rooms/" + code), {
-        player1: currentUser.uid,
-        player2: null,
-        names: { [currentUser.uid]: cleanName() }
-      })
+      await update(ref(database, "rooms/" + code), {
+  player2: currentUser.uid,
+  ["names/" + currentUser.uid]: cleanName()
+})
       setRoomCode(code)
       setMessage("Joined room!")
 
@@ -543,7 +542,7 @@ export function useTongitsGame() {
 
     await set(ref(database, "rooms/" + code + "/hands/" + player1), player1Hand)
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
-    await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
+   await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
     await remove(ref(database, "rooms/" + code + "/rematch"))
     await set(ref(database, "rooms/" + code + "/game"), gameData)
   }

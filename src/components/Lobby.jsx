@@ -5,6 +5,8 @@
  */
 import "../styles/Lobby.css"
 function Lobby({
+   username,
+  setUsername,
   inputCode,
   setInputCode,
   message,
