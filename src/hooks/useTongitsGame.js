@@ -23,12 +23,13 @@ const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 
 export function useTongitsGame() {
+  
   const [chatMessages, setChatMessages] = useState([])
-const [chatOpen, setChatOpen] = useState(false)
-const [unread, setUnread] = useState(0)
-const chatOpenRef = useRef(false)
-const chatIdsRef = useRef(null)      // null until the first snapshot arrives
-const lastChatSentRef = useRef(0)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [unread, setUnread] = useState(0)
+  const chatOpenRef = useRef(false)
+  const chatIdsRef = useRef(null)      // null until the first snapshot arrives
+  const lastChatSentRef = useRef(0)
   const [roomCode, setRoomCode] = useState(() => localStorage.getItem("roomCode") || "")
   const [inputCode, setInputCode] = useState("")
   const [message, setMessage] = useState("")
@@ -175,54 +176,54 @@ const lastChatSentRef = useRef(0)
   }
 
   /* CHAT */
-useEffect(() => {
-  chatOpenRef.current = chatOpen
-  if (chatOpen) setUnread(0)
-}, [chatOpen])
+  useEffect(() => {
+    chatOpenRef.current = chatOpen
+    if (chatOpen) setUnread(0)
+  }, [chatOpen])
 
-useEffect(() => {
-  if (!roomCode) return
+  useEffect(() => {
+    if (!roomCode) return
 
-  setChatMessages([])
-  setUnread(0)
-  chatIdsRef.current = null
+    setChatMessages([])
+    setUnread(0)
+    chatIdsRef.current = null
 
-  const chatQuery = query(ref(database, "rooms/" + roomCode + "/chat"), limitToLast(50))
+    const chatQuery = query(ref(database, "rooms/" + roomCode + "/chat"), limitToLast(50))
 
-  const unsubscribe = onValue(chatQuery, snapshot => {
-    const list = []
-    snapshot.forEach(child => { list.push({ id: child.key, ...child.val() }) })
-    setChatMessages(list)
+    const unsubscribe = onValue(chatQuery, snapshot => {
+      const list = []
+      snapshot.forEach(child => { list.push({ id: child.key, ...child.val() }) })
+      setChatMessages(list)
 
-    const prev = chatIdsRef.current
-    chatIdsRef.current = new Set(list.map(m => m.id))
+      const prev = chatIdsRef.current
+      chatIdsRef.current = new Set(list.map(m => m.id))
 
-    // don't count history on first load, or messages while the panel is open
-    if (prev === null || chatOpenRef.current) return
+      // don't count history on first load, or messages while the panel is open
+      if (prev === null || chatOpenRef.current) return
 
-   const fresh = list.filter(m => !prev.has(m.id) && m.from !== auth.currentUser?.uid)
-if (fresh.length) {
-  setUnread(n => n + fresh.length)
-  const last = fresh[fresh.length - 1]
-  notify("💬 " + last.text.slice(0, 60), "info")
-}
-  })
+      const fresh = list.filter(m => !prev.has(m.id) && m.from !== auth.currentUser?.uid)
+      if (fresh.length) {
+        setUnread(n => n + fresh.length)
+        const last = fresh[fresh.length - 1]
+        notify("💬 " + last.text.slice(0, 60), "info")
+      }
+    })
 
-  return () => unsubscribe()
-}, [roomCode])
+    return () => unsubscribe()
+  }, [roomCode])
 
-async function sendChat(text) {
-  const clean = text.trim().slice(0, 200)
-  if (!clean || !roomCode || !user) return
-  if (Date.now() - lastChatSentRef.current < 500) return
-  lastChatSentRef.current = Date.now()
+  async function sendChat(text) {
+    const clean = text.trim().slice(0, 200)
+    if (!clean || !roomCode || !user) return
+    if (Date.now() - lastChatSentRef.current < 500) return
+    lastChatSentRef.current = Date.now()
 
-  await push(ref(database, "rooms/" + roomCode + "/chat"), {
-    from: user.uid,
-    text: clean,
-    ts: Date.now()
-  })
-}
+    await push(ref(database, "rooms/" + roomCode + "/chat"), {
+      from: user.uid,
+      text: clean,
+      ts: Date.now()
+    })
+  }
 
   /* NOT A MEMBER */
   useEffect(() => {
@@ -363,22 +364,22 @@ async function sendChat(text) {
   }, [game?.discard])
 
   /* OPPONENT DRAW ANIMATION */
-useEffect(() => {
-  if (!game) { prevDeckLenRef.current = null; return }
+  useEffect(() => {
+    if (!game) { prevDeckLenRef.current = null; return }
 
-  const len = game.deck?.length ?? 0
-  const prev = prevDeckLenRef.current
-  prevDeckLenRef.current = len
+    const len = game.deck?.length ?? 0
+    const prev = prevDeckLenRef.current
+    prevDeckLenRef.current = len
 
-  if (prev === null || !user || game.status !== "playing") return
+    if (prev === null || !user || game.status !== "playing") return
 
-  if (len === prev - 1 && game.currentTurn !== user.uid) {
-    flyCard({
-      source: $('[data-fly="deck"]'),
-      getTarget: () => $(".opponent .cards")
-    })
-  }
-}, [game?.deck?.length])
+    if (len === prev - 1 && game.currentTurn !== user.uid) {
+      flyCard({
+        source: $('[data-fly="deck"]'),
+        getTarget: () => $(".opponent .cards")
+      })
+    }
+  }, [game?.deck?.length])
 
   /* LEAVE ROOM */
   async function leaveRoom() {
@@ -534,27 +535,27 @@ useEffect(() => {
   }
 
   /* SHARED HELPERS */
- function applyScores(updates, winner) {
-  const old = room?.scores || {}
-  const next = {}
+  function applyScores(updates, winner) {
+    const old = room?.scores || {}
+    const next = {}
 
-  for (const uid of [room.player1, room.player2]) {
-    const cur = {
-      wins: 0, losses: 0, ties: 0, streak: 0, loseStreak: 0,
-      ...(old[uid] || {})
+    for (const uid of [room.player1, room.player2]) {
+      const cur = {
+        wins: 0, losses: 0, ties: 0, streak: 0, loseStreak: 0,
+        ...(old[uid] || {})
+      }
+
+      if (winner === "tie") {
+        next[uid] = { ...cur, ties: cur.ties + 1, streak: 0, loseStreak: 0 }
+      } else if (winner === uid) {
+        next[uid] = { ...cur, wins: cur.wins + 1, streak: cur.streak + 1, loseStreak: 0 }
+      } else {
+        next[uid] = { ...cur, losses: cur.losses + 1, streak: 0, loseStreak: cur.loseStreak + 1 }
+      }
     }
 
-    if (winner === "tie") {
-      next[uid] = { ...cur, ties: cur.ties + 1, streak: 0, loseStreak: 0 }
-    } else if (winner === uid) {
-      next[uid] = { ...cur, wins: cur.wins + 1, streak: cur.streak + 1, loseStreak: 0 }
-    } else {
-      next[uid] = { ...cur, losses: cur.losses + 1, streak: 0, loseStreak: cur.loseStreak + 1 }
-    }
+    updates["scores"] = next
   }
-
-  updates["scores"] = next
-}
 
   function applyWinIfEmpty(updates, newHand) {
     if (newHand.length === 0) {
@@ -570,115 +571,127 @@ useEffect(() => {
       getStat(game, user.uid, key) + amount
   }
 
- /* GROUPS (manual: whatever the player selected) */
-const activeGroups = groups
-  .map(g => g.filter(c => myHand.includes(c)))
-  .filter(g => g.length >= 2)
-
-async function groupHand() {
-  if (selectedCards.length < 2) {
-    warn("Select 2 or more cards to group")
-    return
-  }
-
-  const picked = myHand.filter(c => selectedCards.includes(c))
-
-  // remove picked cards from any existing group, drop groups that shrink below 2
-  const kept = activeGroups
-    .map(g => g.filter(c => !picked.includes(c)))
+  /* GROUPS (manual: whatever the player selected) */
+  const activeGroups = groups
+    .map(g => g.filter(c => myHand.includes(c)))
     .filter(g => g.length >= 2)
 
-  const next = [...kept, picked]
-  const grouped = new Set(next.flat())
-  const rest = myHand.filter(c => !grouped.has(c))
+  async function groupHand() {
+    if (selectedCards.length < 2) {
+      warn("Select 2 or more cards to group")
+      return
+    }
 
-  setSortMode(null)
-  setGroups(next)
-  setSelectedCards([])
-  await applySortedHand([...rest, ...next.flat()])
-  setMessage("Cards grouped")
-}
+    const picked = myHand.filter(c => selectedCards.includes(c))
 
-function ungroupSelected() {
-  if (selectedCards.length === 0) {
-    setGroups([])
-    setMessage("Groups cleared")
-    return
-  }
-  setGroups(
-    activeGroups
-      .map(g => g.filter(c => !selectedCards.includes(c)))
+    // remove picked cards from any existing group, drop groups that shrink below 2
+    const kept = activeGroups
+      .map(g => g.filter(c => !picked.includes(c)))
       .filter(g => g.length >= 2)
-  )
-  setSelectedCards([])
+
+    const next = [...kept, picked]
+    const grouped = new Set(next.flat())
+    const rest = myHand.filter(c => !grouped.has(c))
+
+    setSortMode(null)
+    setGroups(next)
+    setSelectedCards([])
+    await applySortedHand([...rest, ...next.flat()])
+    setMessage("Cards grouped")
+  }
+
+  function ungroupSelected() {
+    if (selectedCards.length === 0) {
+      setGroups([])
+      setMessage("Groups cleared")
+      return
+    }
+    setGroups(
+      activeGroups
+        .map(g => g.filter(c => !selectedCards.includes(c)))
+        .filter(g => g.length >= 2)
+    )
+    setSelectedCards([])
+  }
+
+  function addToHand(card) {
+  if (sortMode) return sortHandByMode([...myHand, card], sortMode)
+
+  // keep grouped cards together: put the new card before the first grouped one
+  const groupedSet = new Set(activeGroups.flat())
+  const firstGrouped = myHand.findIndex(c => groupedSet.has(c))
+
+  return firstGrouped === -1
+    ? [...myHand, card]
+    : [...myHand.slice(0, firstGrouped), card, ...myHand.slice(firstGrouped)]
 }
 
   /* CREATE MELD */
-async function createMeld(cardsOverride) {
-  // a drag passes its own card list; the MELD button passes a click event, so ignore that
-  const cards = Array.isArray(cardsOverride) ? cardsOverride : selectedCards
+  async function createMeld(cardsOverride) {
+    // a drag passes its own card list; the MELD button passes a click event, so ignore that
+    const cards = Array.isArray(cardsOverride) ? cardsOverride : selectedCards
 
-  if (!game || !user) return
-  if (game.status === "finished") return
+    if (!game || !user) return
+    if (game.status === "finished") return
 
-  if (game.currentTurn !== user.uid) {
-    setMessage("It's not your turn")
-    return
+    if (game.currentTurn !== user.uid) {
+      setMessage("It's not your turn")
+      return
+    }
+    if (game.phase !== "discard") {
+      warn("Draw a card first")
+      return
+    }
+    if (cards.length < 3) {
+      setMessage("Select at least 3 cards")
+      return
+    }
+    if (!isValidMeld(cards)) {
+      setMessage("Those cards do not form a valid meld")
+      return
+    }
+    if (game.mustMeld && !cards.includes(game.mustMeld)) {
+      setMessage("Your meld must include the card you took: " + game.mustMeld)
+      return
+    }
+
+    const newMeld = {
+      id: Date.now().toString(),
+      owner: user.uid,
+      cards: sortMeldCards(cards)
+    }
+
+    const newHand = myHand.filter(card => !cards.includes(card))
+    const updatedMelds = mergeMelds([...(game.melds || []), newMeld])
+
+    const updates = {
+      ["hands/" + user.uid]: newHand,
+      "game/melds": updatedMelds,
+      "game/mustMeld": null
+    }
+
+    bump(updates, "melds", 1)
+    bump(updates, "cardsMelded", cards.length)
+    applyWinIfEmpty(updates, newHand)
+
+    cards.forEach((c, i) =>
+      flyCard({
+        source: $card(c),
+        delay: i * 60,
+        getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
+      })
+    )
+
+    await update(ref(database, "rooms/" + roomCode), updates)
+
+    setSelectedCards([])
+    setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
   }
-  if (game.phase !== "discard") {
-    warn("Draw a card first")
-    return
-  }
-  if (cards.length < 3) {
-    setMessage("Select at least 3 cards")
-    return
-  }
-  if (!isValidMeld(cards)) {
-    setMessage("Those cards do not form a valid meld")
-    return
-  }
-  if (game.mustMeld && !cards.includes(game.mustMeld)) {
-    setMessage("Your meld must include the card you took: " + game.mustMeld)
-    return
-  }
-
-  const newMeld = {
-    id: Date.now().toString(),
-    owner: user.uid,
-    cards: sortMeldCards(cards)
-  }
-
-  const newHand = myHand.filter(card => !cards.includes(card))
-  const updatedMelds = mergeMelds([...(game.melds || []), newMeld])
-
-  const updates = {
-    ["hands/" + user.uid]: newHand,
-    "game/melds": updatedMelds,
-    "game/mustMeld": null
-  }
-
-  bump(updates, "melds", 1)
-  bump(updates, "cardsMelded", cards.length)
-  applyWinIfEmpty(updates, newHand)
-
-  cards.forEach((c, i) =>
-    flyCard({
-      source: $card(c),
-      delay: i * 60,
-      getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
-    })
-  )
-
-  await update(ref(database, "rooms/" + roomCode), updates)
-
-  setSelectedCards([])
-  setMessage(newHand.length === 0 ? "You emptied your hand!" : "Meld created!")
-}
 
   /* ADD TO MELD */
- async function addToMeld(meldId, cardArg) {
+  async function addToMeld(meldId, cardArg) {
 
-  
+
     if (!game || !user) return
     if (game.status === "finished") return
 
@@ -690,11 +703,11 @@ async function createMeld(cardsOverride) {
       setMessage("Draw a card from the pile first")
       return
     }
-    
+
     if (!cardArg && selectedCards.length !== 1) {
-    setMessage("Select one card to add")
-    return
-  }
+      setMessage("Select one card to add")
+      return
+    }
     const card = cardArg || selectedCards[0]
 
     if (game.mustMeld && card !== game.mustMeld) {
@@ -703,7 +716,7 @@ async function createMeld(cardsOverride) {
     }
 
     const meld = (game.melds || []).find(item => item.id === meldId)
-    
+
     if (!meld) {
       setMessage("Meld not found")
       return
@@ -749,7 +762,7 @@ async function createMeld(cardsOverride) {
   function toggleCard(card) {
     if (!game || !user) return
     if (game.status === "finished") return
-    
+
 
     setSelectedCards(previous =>
       previous.includes(card)
@@ -883,10 +896,10 @@ async function createMeld(cardsOverride) {
 
     bump(updates, "draws", 1)
     flyCard({
-  source: $('[data-fly="deck"]'),
-  getTarget: () => $card(card),
-  hideTarget: true
-})
+      source: $('[data-fly="deck"]'),
+      getTarget: () => $card(card),
+      hideTarget: true
+    })
     await update(ref(database, "rooms/" + roomCode), updates)
 
     setNewlyDrawnCard(card)
@@ -1025,16 +1038,16 @@ async function createMeld(cardsOverride) {
       return
     }
     if (String(over.id).startsWith("meld:")) {
-  await addToMeld(String(over.id).slice(5), active.id)
-  return
-}
-if (over.id === "new-meld") {
-  const cards = selectedCards.includes(active.id)
-    ? selectedCards
-    : [...selectedCards, active.id]
-  await createMeld(cards)
-  return
-}
+      await addToMeld(String(over.id).slice(5), active.id)
+      return
+    }
+    if (over.id === "new-meld") {
+      const cards = selectedCards.includes(active.id)
+        ? selectedCards
+        : [...selectedCards, active.id]
+      await createMeld(cards)
+      return
+    }
     if (active.id === over.id) return
 
     const oldIndex = myHand.indexOf(active.id)
