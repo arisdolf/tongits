@@ -136,3 +136,21 @@
   margin: 0;
   padding: 0;
 }
+
+/* square card corners */
+.card,
+.my-card,
+.card-face,
+.card-back,
+.deck,
+.discard,
+.drag-ghost,
+.meld-card,
+.modal-card,
+.playing-card,
+.playing-card.small,
+.playing-card.photo-card,
+.playing-card.photo-card.small,
+.photo-card img {
+  border-radius: 0 !important;
+}

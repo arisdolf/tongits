@@ -21,7 +21,7 @@ export function flyCard({
     top: from.top + "px",
     width: from.width + "px",
     height: from.height + "px",
-    borderRadius: "9px",
+    borderRadius: "0",
     overflow: "hidden",
     zIndex: "1500",
     pointerEvents: "none"
