@@ -10,7 +10,7 @@ import { useTongitsGame } from "./hooks/useTongitsGame"
 import EmoteBar, { EmoteContent } from "./components/EmoteBar"
 import { getEmote } from "./utils/emotes"
 import ChatBox from "./components/ChatBox"
-import { Analytics } from "@vercel/analytics/next"
+
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
 import MeldArea from "./components/MeldArea"
