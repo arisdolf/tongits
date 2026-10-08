@@ -13,7 +13,8 @@ function WinModal({
   onAcceptRematch,
   onDeclineRematch,
   onCancelRematch,
-  onLeave
+  onLeave,
+  myName = "YOU", opponentName = "OPP"
 }) {
 
   const [musicOn, setMusicOn] = useState(true)
@@ -168,7 +169,7 @@ function WinModal({
         <div className="win-title">{title}</div>
         <p className="win-reason">{reason}</p>
        <div className="win-score">
-  YOU {myScore.wins || 0} – {oppScore.wins || 0} OPP
+  {myName} {myScore.wins || 0} – {oppScore.wins || 0} {opponentName}
 </div>
 
 {iWon && myStreak >= 2 && (
@@ -190,18 +191,18 @@ function WinModal({
 )}
 
 {!iWon && !isTie && myLoseStreak < 2 && oppStreak >= 2 && (
-  <div className="streak-banner opp">Opponent is on a {oppStreak} win streak</div>
+  <div className="streak-banner opp">{opponentName} is on a {oppStreak} win streak</div>
 )}
         <div className="ratings">
 
           <div className="rating">
-            <div className="rating-name">YOU</div>
+            <div className="rating-name">{myName}</div>
             <div className={"rating-grade grade-" + me.grade}>{me.grade}</div>
             <div className="rating-score">{me.score}/100 · {me.label}</div>
           </div>
 
           <div className="rating">
-            <div className="rating-name">OPPONENT</div>
+            <div className="rating-name">{opponentName}</div>
             <div className={"rating-grade grade-" + opp.grade}>{opp.grade}</div>
             <div className="rating-score">{opp.score}/100 · {opp.label}</div>
           </div>
@@ -214,8 +215,8 @@ function WinModal({
           <thead>
             <tr>
               <th></th>
-              <th>YOU</th>
-              <th>OPP</th>
+              <th>{myName}</th>
+<th>{opponentName}</th>
             </tr>
           </thead>
           <tbody>

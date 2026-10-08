@@ -22,7 +22,14 @@ function Lobby({
       <p className="subtitle">
         Play Tongits with someone anywhere
       </p>
-
+      <div className="name-area">
+  <input
+    value={username}
+    onChange={e => setUsername(e.target.value)}
+    placeholder="your name"
+    maxLength={12}
+  />
+</div>
       <div className="room-buttons">
         <button onClick={onCreateRoom}>
           Create Room

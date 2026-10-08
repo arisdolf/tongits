@@ -23,7 +23,7 @@ const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 
 export function useTongitsGame() {
-  
+
   const [chatMessages, setChatMessages] = useState([])
   const [chatOpen, setChatOpen] = useState(false)
   const [unread, setUnread] = useState(0)
@@ -58,7 +58,7 @@ export function useTongitsGame() {
   const emoteSeenRef = useRef(null)
   const lastEmoteSentRef = useRef(0)
   const prevDiscardRef = useRef(null)
-
+  const [username, setUsername] = useState(() => localStorage.getItem("username") || "")
   function notify(text, type = "info") {
     setToast({ id: Date.now(), text, type })
   }
@@ -74,6 +74,14 @@ export function useTongitsGame() {
     if (roomCode) localStorage.setItem("roomCode", roomCode)
     else localStorage.removeItem("roomCode")
   }, [roomCode])
+
+  useEffect(() => {
+    localStorage.setItem("username", username)
+  }, [username])
+
+  function cleanName() {
+    return username.trim().slice(0, 12) || "Player"
+  }
 
   useEffect(() => {
     prevDeckLenRef.current = null
@@ -463,12 +471,13 @@ export function useTongitsGame() {
         roomData.player1 === currentUser.uid ||
         roomData.player2 === currentUser.uid
 
-      if (isMember) {
-        setRoomCode(code)
-        setMessage("Rejoined room")
-        return
-      }
-
+     if (isMember) {
+  await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
+  setRoomCode(code)
+  setMessage("Rejoined room")
+  return
+}
+      
       if (roomData.player2) {
         notify(
           roomData.game?.status === "playing"
@@ -480,7 +489,11 @@ export function useTongitsGame() {
       }
 
       await set(ref(database, "rooms/" + code + "/player2"), currentUser.uid)
-
+      await set(ref(database, "rooms/" + code), {
+        player1: currentUser.uid,
+        player2: null,
+        names: { [currentUser.uid]: cleanName() }
+      })
       setRoomCode(code)
       setMessage("Joined room!")
 
@@ -530,6 +543,7 @@ export function useTongitsGame() {
 
     await set(ref(database, "rooms/" + code + "/hands/" + player1), player1Hand)
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
+    await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
     await remove(ref(database, "rooms/" + code + "/rematch"))
     await set(ref(database, "rooms/" + code + "/game"), gameData)
   }
@@ -615,16 +629,16 @@ export function useTongitsGame() {
   }
 
   function addToHand(card) {
-  if (sortMode) return sortHandByMode([...myHand, card], sortMode)
+    if (sortMode) return sortHandByMode([...myHand, card], sortMode)
 
-  // keep grouped cards together: put the new card before the first grouped one
-  const groupedSet = new Set(activeGroups.flat())
-  const firstGrouped = myHand.findIndex(c => groupedSet.has(c))
+    // keep grouped cards together: put the new card before the first grouped one
+    const groupedSet = new Set(activeGroups.flat())
+    const firstGrouped = myHand.findIndex(c => groupedSet.has(c))
 
-  return firstGrouped === -1
-    ? [...myHand, card]
-    : [...myHand.slice(0, firstGrouped), card, ...myHand.slice(firstGrouped)]
-}
+    return firstGrouped === -1
+      ? [...myHand, card]
+      : [...myHand.slice(0, firstGrouped), card, ...myHand.slice(firstGrouped)]
+  }
 
   /* CREATE MELD */
   async function createMeld(cardsOverride) {
@@ -1097,10 +1111,13 @@ export function useTongitsGame() {
     myStreak: myScore.streak || 0
   }
 
-  const starterName =
-    game && room
-      ? game.starter === room.player1 ? "Player 1" : "Player 2"
-      : ""
+ const myName = room?.names?.[user?.uid] || "You"
+const opponentName = room?.names?.[opponentUid] || "Opponent"
+
+const starterName =
+  game && user
+    ? game.starter === user.uid ? myName : opponentName
+    : ""
 
   const discardPile = game?.discard || []
 
@@ -1125,6 +1142,7 @@ export function useTongitsGame() {
     scoreboard,
     activeEmote, sendEmote,
     groups: activeGroups, groupHand, ungroupSelected,
-    chatMessages, chatOpen, setChatOpen, unread, sendChat
+    chatMessages, chatOpen, setChatOpen, unread, sendChat,
+    username, setUsername, myName, opponentName
   }
 }

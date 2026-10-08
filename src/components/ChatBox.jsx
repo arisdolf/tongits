@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import "../styles/Chat.css"
 
-function ChatBox({ messages, myUid, open, onToggle, unread, onSend }) {
+function ChatBox({ messages, myUid, open, onToggle, unread, onSend, opponentName }) {
   const [text, setText] = useState("")
   const endRef = useRef(null)
 
@@ -34,6 +34,7 @@ function ChatBox({ messages, myUid, open, onToggle, unread, onSend }) {
             {messages.length === 0 && <div className="chat-empty">Say hi 👋</div>}
             {messages.map(m => (
               <div key={m.id} className={"chat-msg " + (m.from === myUid ? "chat-mine" : "chat-opp")}>
+               {m.from !== myUid && <div className="chat-name">{opponentName}</div>}
                 {m.text}
               </div>
             ))}

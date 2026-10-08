@@ -30,7 +30,7 @@
   color: #d4b8b8;
   margin-bottom: 30px;
 }
-
+.name-area { margin-bottom: 18px; }
 .room-buttons,
 .join-area {
   display: flex;

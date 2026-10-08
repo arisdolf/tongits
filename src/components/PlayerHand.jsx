@@ -10,7 +10,8 @@ function PlayerHand({
   sortMenuOpen, setSortMenuOpen, onSortBySuit, onSortByRank,
   isMyTurn, phase, onMeld, onDiscard, onClearSelection,
   starterName, hasStarter,
-  groups = [], onGroup, onUngroup
+  groups = [], onGroup, onUngroup,
+  name = "you"
 }) {
 
   const groupOf = {}
@@ -49,7 +50,7 @@ function PlayerHand({
         )}
       </div>
 
-      <div className="player-name">You</div>
+      <div className="player-name">{name}</div>
 
       <SortableContext items={myHand} strategy={rectSortingStrategy}>
         <div className="cards my-hand">

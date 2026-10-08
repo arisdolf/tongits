@@ -41,6 +41,9 @@ function App() {
     return (
       <div className="game">
         <Lobby
+        username={g.username}
+  setUsername={g.setUsername}
+ 
           inputCode={g.inputCode}
           setInputCode={g.setInputCode}
           message={g.message}
@@ -60,9 +63,9 @@ function App() {
   <div className="top-brand">
     <strong>TONGITS</strong>
     <span className="top-score">
-      YOU {g.scoreboard.me} – {g.scoreboard.opp} OPP
-      {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
-    </span>
+  {g.myName} {g.scoreboard.me} – {g.scoreboard.opp} {g.opponentName}
+  {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
+</span>
   </div>
 
   <span>ROOM {g.roomCode}</span>
@@ -100,7 +103,7 @@ function App() {
           <div className="table-body">
 
             <div className="zone zone-opp">
-              <OpponentPanel opponentCount={g.opponentCount} />
+              <OpponentPanel opponentCount={g.opponentCount} name={g.opponentName} />
 
               {g.opponentLeft ? (
                 <div className="disconnect-banner">
@@ -153,6 +156,7 @@ function App() {
 
             <div className="zone zone-hand">
               <PlayerHand
+              name={g.myName}
                 onUngroup={g.ungroupSelected}
                 groups={g.groups}
                 onGroup={g.groupHand}
@@ -193,6 +197,7 @@ function App() {
         <p className="message">{g.message}</p>
 
         <WinModal
+        myName={g.myName} opponentName={g.opponentName}
           game={g.game}
           room={g.room}
           currentUserId={g.user?.uid}

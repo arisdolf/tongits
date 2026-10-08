@@ -2,14 +2,12 @@ import CardBack from "./CardBack"
 import "../styles/Cards.css"
 import "../styles/OpponentPanel.css"
 
-function OpponentPanel({ opponentCount }) {
+function OpponentPanel({ opponentCount, name = "Opponent" }) {
 
   return (
     <div className="player opponent">
 
-      <div className="player-name">
-        Opponent
-      </div>
+      <div className="player-name">{name}</div>
 
       <div className="cards">
 
