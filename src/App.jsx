@@ -22,6 +22,7 @@ import WinModal from "./components/WinModal"
 import Toast from "./components/Toast"
 
 import "./styles/App.css"
+import "./styles/Balatro.css"
 import "./styles/LandScape.css" // keep last so it overrides
 
 // Prefer whatever is under the pointer (discard pile), else nearest card
