@@ -5,7 +5,7 @@ function CardBack({ className = "" }) {
     <div
       className={"card-back " + className}
       style={{
-        backgroundImage: `url(${import.meta.env.BASE_URL}cards/backcards/back.jpg)`,
+        backgroundImage: `url(${import.meta.env.BASE_URL}cards/backcards/back.png)`,
         backgroundSize: "100% 100%",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat"
