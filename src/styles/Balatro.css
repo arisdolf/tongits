@@ -11,9 +11,9 @@
 ========================================================= */
 
 :root {
-  --felt-1: #4f8f84;
-  --felt-2: #2a6b66;
-  --felt-3: #1d3d3a;
+   --felt-1: #d9534a;
+  --felt-2: #a3302b;
+  --felt-3: #4a0f0d;
 
   --panel: #374244;
   --panel-hi: #4f6367;
@@ -45,8 +45,8 @@ body {
 
 .game {
   background:
-    radial-gradient(circle at 15% 20%, rgba(79, 143, 132, 0.55), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(254, 95, 85, 0.25), transparent 40%),
+     radial-gradient(circle at 15% 20%, rgba(217, 83, 74, 0.5), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(0, 157, 255, 0.15), transparent 40%),
     var(--felt-3);
 }
 
@@ -60,8 +60,9 @@ body {
   background:
     radial-gradient(circle at 25% 25%, var(--felt-1) 0%, transparent 50%),
     radial-gradient(circle at 75% 70%, var(--felt-2) 0%, transparent 55%),
-    radial-gradient(circle at 60% 20%, rgba(254, 95, 85, 0.22) 0%, transparent 35%),
+    radial-gradient(circle at 60% 20%, rgba(255, 154, 0, 0.2) 0%, transparent 35%),
     var(--felt-3);
+  background-size: 160% 160%;
   background-size: 160% 160%;
   border: 8px solid var(--panel-dark);
   border-radius: 18px;
@@ -395,4 +396,95 @@ button:disabled {
 /* respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .table, .title, .my-card:hover .card-face { animation: none !important; }
+}
+
+/* =========================================================
+   MOBILE (portrait phones)
+========================================================= */
+@media (max-width: 600px) and (orientation: portrait) {
+
+  /* use the real visible height (fixes the browser address-bar jump) */
+  .game {
+    min-height: 100dvh;
+    padding: 6px;
+    align-items: stretch;
+  }
+
+  .table {
+    min-height: calc(100dvh - 12px);
+    padding: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* TOP BAR: row 1 = score + buttons, row 2 = room code */
+  .top-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "room  room";
+    row-gap: 8px;
+    align-items: center;
+  }
+
+  .top-brand   { grid-area: brand; min-width: 0; }
+  .top-actions { grid-area: actions; flex-shrink: 0; gap: 6px; }
+  .top-bar > .room-code { grid-area: room; justify-self: center; }
+
+  .top-bar strong { font-size: 18px; }
+
+  .top-score {
+    font-size: 10px;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .leave-button {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .chat-wrap button.chat-toggle,
+  .emote-bar button.emote-toggle {
+    padding: 4px 8px !important;
+  }
+
+  /* panels open under the two-row top bar */
+  .chat-panel,
+  .emote-panel {
+    top: calc(env(safe-area-inset-top, 0px) + 86px);
+    right: 8px;
+  }
+
+  /* HAND BUTTONS: one tidy row of 5 */
+  .hand-actions {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 16px;
+    padding: 0 2px;
+  }
+
+  .hand-actions button:not(.card):not(.deck) {
+    min-width: 0;
+    padding: 10px 2px;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* turn banner + messages */
+  .turn-message { font-size: 11px; padding: 5px 12px; }
+  .message { font-size: 12px; text-align: center; }
+
+  /* modals fit the screen and scroll */
+  .modal-overlay { padding: 10px; }
+  .modal-panel { max-height: 92%; padding: 14px; }
+  .win-title { font-size: 22px; }
+}
+
+/* very small phones */
+@media (max-width: 380px) and (orientation: portrait) {
+  .top-bar strong { font-size: 15px; }
+  .hand-actions button:not(.card):not(.deck) { font-size: 9px; }
 }
