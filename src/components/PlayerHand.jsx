@@ -11,7 +11,9 @@ function PlayerHand({
   isMyTurn, phase, onMeld, onDiscard, onClearSelection,
   starterName, hasStarter,
   groups = [], onGroup, onUngroup,
+  canMeld = false,
   name = "you"
+    
 }) {
 
   const groupOf = {}
@@ -44,7 +46,7 @@ function PlayerHand({
             </button>
             <button className="sort-menu-item"
               onClick={() => { onSortByRank(); setSortMenuOpen(false) }}>
-              High → Low
+              By rank
             </button>
           </div>
         )}
@@ -73,7 +75,7 @@ function PlayerHand({
       </SortableContext>
 
       <div className="hand-actions">
-  <button onClick={onMeld}>MELD</button>
+  <button onClick={onMeld} className={canMeld ? "can-meld" : ""}>MELD</button>
   <button onClick={onGroup} disabled={selectedCards.length < 2}>GROUP</button>
   <button onClick={onUngroup} disabled={groups.length === 0}>UNGROUP</button>
   <button onClick={onDiscard}>DISCARD</button>

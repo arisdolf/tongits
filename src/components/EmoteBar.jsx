@@ -10,12 +10,10 @@ export function EmoteContent({ emote }) {
   return <span>{emote.content}</span>
 }
 
-function EmoteBar({ onSend }) {
-  const [open, setOpen] = useState(false)
-
+function EmoteBar({ onSend, open, onToggle, onClose }) {
   return (
     <div className="emote-bar">
-      <button className="emote-toggle" onClick={() => setOpen(o => !o)}>😀</button>
+      <button className="emote-toggle" onClick={onToggle}>😀</button>
 
       {open && (
         <div className="emote-panel">
@@ -23,7 +21,7 @@ function EmoteBar({ onSend }) {
             <button
               key={e.id}
               className="emote-item"
-              onClick={() => { onSend(e.id); setOpen(false) }}
+              onClick={() => { onSend(e.id); onClose() }}
             >
               <EmoteContent emote={e} />
             </button>

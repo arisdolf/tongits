@@ -10,7 +10,7 @@ import { useTongitsGame } from "./hooks/useTongitsGame"
 import EmoteBar, { EmoteContent } from "./components/EmoteBar"
 import { getEmote } from "./utils/emotes"
 import ChatBox from "./components/ChatBox"
-
+import { isValidMeld } from "./utils/cardUtils"
 import Lobby from "./components/Lobby"
 import OpponentPanel from "./components/OpponentPanel"
 import MeldArea from "./components/MeldArea"
@@ -53,8 +53,15 @@ async function copyText(text) {
 //test run
 function App() {
 
-
+  const [emoteOpen, setEmoteOpen] = useState(false)
   const g = useTongitsGame()
+  const canMeld =
+  !!g.isMyTurn &&
+  g.game?.status === "playing" &&
+  g.game?.phase === "discard" &&
+  g.selectedCards.length >= 3 &&
+  isValidMeld(g.selectedCards) &&
+  (!g.game?.mustMeld || g.selectedCards.includes(g.game.mustMeld))
   const [copied, setCopied] = useState(false)
   function copyRoomCode() {
   copyText(g.roomCode)
@@ -97,16 +104,27 @@ function App() {
 </button>
 
   <div className="top-actions">
-    <EmoteBar onSend={g.sendEmote} />
+   <EmoteBar
+  onSend={g.sendEmote}
+  open={emoteOpen}
+  onToggle={() => {
+    if (!emoteOpen) g.setChatOpen(false)
+    setEmoteOpen(o => !o)
+  }}
+  onClose={() => setEmoteOpen(false)}
+/>
     <ChatBox
-      messages={g.chatMessages}
-      myUid={g.user?.uid}
-      open={g.chatOpen}
-      onToggle={() => g.setChatOpen(o => !o)}
-      unread={g.unread}
-      onSend={g.sendChat}
-      opponentName={g.opponentName}
-    />
+  messages={g.chatMessages}
+  myUid={g.user?.uid}
+  open={g.chatOpen}
+  onToggle={() => {
+    if (!g.chatOpen) setEmoteOpen(false)
+    g.setChatOpen(o => !o)
+  }}
+  unread={g.unread}
+  onSend={g.sendChat}
+  opponentName={g.opponentName}
+/>
     <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
   </div>
 </div>
@@ -183,6 +201,8 @@ function App() {
 
             <div className="zone zone-hand">
               <PlayerHand
+              canMeld={canMeld}
+ 
               name={g.myName}
                 onUngroup={g.ungroupSelected}
                 groups={g.groups}
