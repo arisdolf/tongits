@@ -32,12 +32,35 @@ function collisionDetection(args) {
   const specific = hits.filter(h => h.id !== "new-meld")
   return specific.length ? specific : hits
 }
+import { useState } from "react"
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    // fallback: navigator.clipboard only works on https or localhost,
+    // so it fails when testing over a LAN IP
+    const area = document.createElement("textarea")
+    area.value = text
+    area.style.position = "fixed"
+    area.style.opacity = "0"
+    document.body.appendChild(area)
+    area.select()
+    document.execCommand("copy")
+    area.remove()
+  }
+}
 //test run
 function App() {
 
 
   const g = useTongitsGame()
-
+  const [copied, setCopied] = useState(false)
+  function copyRoomCode() {
+  copyText(g.roomCode)
+  setCopied(true)
+  setTimeout(() => setCopied(false), 1500)
+}
   if (!g.roomCode) {
     return (
       <div className="game">
@@ -69,7 +92,9 @@ function App() {
 </span>
   </div>
 
-  <span>ROOM {g.roomCode}</span>
+  <button className="room-code" onClick={copyRoomCode} title="Copy room code">
+  ROOM {g.roomCode} {copied ? "✔ COPIED" : "⧉"}
+</button>
 
   <div className="top-actions">
     <EmoteBar onSend={g.sendEmote} />

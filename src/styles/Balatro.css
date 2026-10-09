@@ -376,7 +376,14 @@ button:disabled {
   border-color: var(--red) !important;
   color: var(--red) !important;
 }
-
+.top-bar button.room-code {
+  --b: var(--panel-dark);
+  --bd: #0f1718;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--gold);
+  border: 2px solid var(--panel-hi);
+}
 /* ---------- MOBILE ---------- */
 
 @media (max-width: 600px) {

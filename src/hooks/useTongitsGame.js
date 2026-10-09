@@ -542,7 +542,7 @@ export function useTongitsGame() {
 
     await set(ref(database, "rooms/" + code + "/hands/" + player1), player1Hand)
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
-   await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
+   
     await remove(ref(database, "rooms/" + code + "/rematch"))
     await set(ref(database, "rooms/" + code + "/game"), gameData)
   }
