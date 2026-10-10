@@ -451,12 +451,13 @@ button:disabled {
   }
 
   /* panels open under the two-row top bar */
-  .chat-panel,
-  .emote-panel {
+  .chat-panel {
     top: calc(env(safe-area-inset-top, 0px) + 86px);
     right: 8px;
   }
-
+    .emote-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 86px - 16px);
+  }
   /* HAND BUTTONS: one tidy row of 5 */
   .hand-actions {
     display: grid;

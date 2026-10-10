@@ -18,7 +18,7 @@ import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import { flyCard, flyMeld } from "../utils/fly"
-
+import { playCardSound } from "../utils/sound"
 const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 

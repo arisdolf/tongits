@@ -1,4 +1,5 @@
-export function flyCard({
+import { playCardSound } from "./sound"
+export function flyCard({ 
   source,            // element whose contents get cloned
   fromRect,          // optional: start rect (e.g. drag position)
   getTarget,         // () => element to fly to (retried for ~600ms)
@@ -38,7 +39,7 @@ export function flyCard({
       else ghost.remove()
       return
     }
-
+    playCardSound(delay)
     const to = target.getBoundingClientRect()
     const prevVisibility = target.style.visibility
     if (hideTarget) target.style.visibility = "hidden"
@@ -140,7 +141,9 @@ export async function flyMeld({ sources, slots = [], getTarget, getFallback }) {
   const SNAP = "cubic-bezier(0.22,1,0.36,1)"
 
   try {
-    // 1. JUMP OUT + FAN
+   
+    // 1. JUMP OUT: in the Promise.all(items.map((it, i) => ...)) for the fan-out
+
     items.forEach((it, i) => {
       const off = i - (n - 1) / 2
       it.dx = stage.x + off * gap - it.cx
@@ -148,15 +151,17 @@ export async function flyMeld({ sources, slots = [], getTarget, getFallback }) {
       it.rot = off * 7
       it.pose = T(it.dx, it.dy, 1.2, it.rot)
       it.stack = T(stage.x - it.cx, stage.y - it.cy, 1.1, ((i % 3) - 1) * 3)
+      
     })
 
-    await Promise.all(items.map((it, i) =>
-      move(it, [
-        { transform: T(0, 0, 1, 0) },
-        { transform: T(it.dx * 0.5, it.dy * 0.5 - 70, 1.3, it.rot * 0.4), offset: 0.45 },
-        { transform: it.pose }
-      ], { duration: 420, delay: i * 50, easing: SNAP })
-    ))
+    await Promise.all(items.map((it, i) => {
+  playCardSound(i * 50)
+  return move(it, [
+    { transform: T(0, 0, 1, 0) },
+    { transform: T(it.dx * 0.5, it.dy * 0.5 - 70, 1.3, it.rot * 0.4), offset: 0.45 },
+    { transform: it.pose }
+  ], { duration: 420, delay: i * 50, easing: SNAP })
+}))
 
     // 2. WIGGLE (shown as a meld)
     await Promise.all(items.map((it, i) =>
@@ -167,7 +172,9 @@ export async function flyMeld({ sources, slots = [], getTarget, getFallback }) {
       ], { duration: 450, delay: i * 30, easing: "ease-in-out" })
     ))
 
-    // 3. COLLAPSE INTO ONE STACK
+  
+    // 3. COLLAPSE: add one line before the collapse Promise.all
+    playCardSound()
     await Promise.all(items.map(it =>
       move(it, [{ transform: it.pose }, { transform: it.stack }],
         { duration: 260, easing: "cubic-bezier(0.5,0,0.75,0)" })
@@ -196,7 +203,8 @@ export async function flyMeld({ sources, slots = [], getTarget, getFallback }) {
 
     // 5. SPREAD INTO THE MELD SLOTS
     await Promise.all(items.map((it, i) => {
-      const slot = useSlots ? slotEls[it.slot] : null
+  playCardSound(i * 35)
+  const slot = useSlots ? slotEls[it.slot] : null
       if (slot) {
         const r = slot.getBoundingClientRect()
         const end = T(
