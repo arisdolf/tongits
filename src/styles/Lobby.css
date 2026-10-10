@@ -69,3 +69,26 @@
     font-size: 35px;
   }
 }
+
+/* page wrapper: leaves room for the top-right button */
+.lobby-page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 48px;
+}
+
+.playing-as {
+  margin: 0;
+  color: #f3dfa0;
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  .lobby-page { padding-top: 44px; }
+}
+
+/* short landscape phones: keep the card compact */
+@media (orientation: landscape) and (max-height: 520px) {
+  .lobby-page { padding-top: 36px; }
+}

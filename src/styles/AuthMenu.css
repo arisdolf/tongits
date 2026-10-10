@@ -1,0 +1,152 @@
+/* =========================
+   AUTH MENU — top-right login / signup
+   Used by: AuthMenu.jsx
+========================= */
+
+.auth-menu {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index: 60;
+}
+
+.auth-menu button.auth-chip {
+  padding: 8px 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  max-width: 55vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  --b: var(--panel, #374244);
+  --bd: var(--panel-dark, #1e2b2d);
+  border: 2px solid var(--panel-hi, #4f6367);
+  color: var(--gold, #e6c35c);
+}
+
+/* logged-in dropdown */
+.auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.auth-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  padding: 14px;
+  text-align: center;
+
+  background: #2a1013;
+  border: 1px solid #5a2830;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.12s ease;
+}
+
+.auth-name  { margin: 0 0 6px; color: #fff; }
+.auth-stats { margin: 0 0 12px; font-size: 12px; color: #f3dfa0; line-height: 1.5; }
+
+.auth-dropdown button.auth-logout {
+  width: 100%;
+  padding: 8px;
+  font-size: 12px;
+  --b: var(--red, #fe5f55);
+  --bd: var(--red-d, #b8352d);
+}
+
+/* login / signup popup */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(10, 18, 19, 0.8);
+  animation: fadeIn 0.15s ease;
+}
+
+.auth-modal {
+  width: 100%;
+  max-width: 340px;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  background: #2a1013;
+  border: 1px solid #5a2830;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.auth-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auth-modal button.auth-tab {
+  flex: 1;
+  padding: 10px 6px;
+  font-size: 12px;
+  --b: transparent;
+  --bd: transparent;
+  box-shadow: none;
+  border: 2px solid #6e3640;
+  color: #e0c4c4;
+  text-shadow: none;
+}
+
+.auth-modal button.auth-tab.active {
+  --b: var(--gold, #e6c35c);
+  border-color: var(--gold, #e6c35c);
+  color: #2a1013;
+}
+
+.auth-modal button.auth-x {
+  flex: none;
+  padding: 6px 10px;
+  --b: transparent;
+  --bd: transparent;
+  box-shadow: none;
+  color: #cfe3d8;
+}
+
+.auth-modal input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 2px solid #6e3640;
+  background: #1a0809;
+  color: white;
+  outline: none;
+  text-align: center;
+  font-size: 16px;          /* stops iOS zooming on focus */
+}
+.auth-modal input:focus { border-color: #e6c35c; }
+
+.auth-error {
+  margin: 0;
+  color: #ffb199;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.auth-guest {
+  margin: 0;
+  font-size: 11px;
+  color: #d4b8b8;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .auth-menu button.auth-chip { padding: 7px 10px; font-size: 11px; }
+}
