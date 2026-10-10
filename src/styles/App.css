@@ -201,3 +201,8 @@
 @media (max-width: 600px) {
   .top-score { font-size: 10px; }
 }
+
+.top-bar {
+  position: relative;
+  z-index: 60;   /* overlay is 50 */
+}

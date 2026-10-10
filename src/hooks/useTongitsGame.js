@@ -17,7 +17,7 @@ import {
 import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
-import { flyCard } from "../utils/fly"
+import { flyCard, flyMeld } from "../utils/fly"
 
 const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
@@ -687,13 +687,12 @@ export function useTongitsGame() {
     bump(updates, "cardsMelded", cards.length)
     applyWinIfEmpty(updates, newHand)
 
-    cards.forEach((c, i) =>
-      flyCard({
-        source: $card(c),
-        delay: i * 60,
-        getTarget: () => $(`[data-meld-id="${newMeld.id}"]`) || $(".meld-list")
-      })
-    )
+    flyMeld({
+  sources: cards.map(c => $card(c)),
+  slots: cards.map(c => newMeld.cards.indexOf(c)),
+  getTarget: () => $(`[data-meld-id="${newMeld.id}"]`),
+  getFallback: () => $(".meld-list")
+})
 
     await update(ref(database, "rooms/" + roomCode), updates)
 
@@ -1069,12 +1068,27 @@ export function useTongitsGame() {
     if (oldIndex === -1 || newIndex === -1) return
 
     const reordered = arrayMove(myHand, oldIndex, newIndex)
+const dragged = active.id
 
-    setSortMode(null)
-    setGroups([])
-    setMyHand(reordered)
+// groups survive the drag. The dragged card leaves its old group,
+// and joins a group only if you drop it onto one of that group's cards.
+const targetGroup = activeGroups.findIndex(g => g.includes(over.id))
 
-    await set(ref(database, "rooms/" + roomCode + "/hands/" + user.uid), reordered)
+let nextGroups = activeGroups.map(g => g.filter(c => c !== dragged))
+if (targetGroup !== -1) nextGroups[targetGroup] = [...nextGroups[targetGroup], dragged]
+
+nextGroups = nextGroups
+  .map(g => [...g].sort((a, b) => reordered.indexOf(a) - reordered.indexOf(b)))
+  .filter(g => g.length >= 2)
+
+// keep each group contiguous: loose cards first, then the groups
+const groupedSet = new Set(nextGroups.flat())
+const rest = reordered.filter(c => !groupedSet.has(c))
+const finalHand = [...rest, ...nextGroups.flat()]
+
+setSortMode(null)
+setGroups(nextGroups)
+await applySortedHand(finalHand)
   }
 
   /* SORT */
