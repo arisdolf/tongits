@@ -56,25 +56,25 @@ function App() {
   const [emoteOpen, setEmoteOpen] = useState(false)
   const g = useTongitsGame()
   const canMeld =
-  !!g.isMyTurn &&
-  g.game?.status === "playing" &&
-  g.game?.phase === "discard" &&
-  g.selectedCards.length >= 3 &&
-  isValidMeld(g.selectedCards) &&
-  (!g.game?.mustMeld || g.selectedCards.includes(g.game.mustMeld))
+    !!g.isMyTurn &&
+    g.game?.status === "playing" &&
+    g.game?.phase === "discard" &&
+    g.selectedCards.length >= 3 &&
+    isValidMeld(g.selectedCards) &&
+    (!g.game?.mustMeld || g.selectedCards.includes(g.game.mustMeld))
   const [copied, setCopied] = useState(false)
   function copyRoomCode() {
-  copyText(g.roomCode)
-  setCopied(true)
-  setTimeout(() => setCopied(false), 1500)
-}
+    copyText(g.roomCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
   if (!g.roomCode) {
     return (
       <div className="game">
         <Lobby
-        username={g.username}
-  setUsername={g.setUsername}
- 
+          user={g.user}
+          username={g.username}
+          setUsername={g.setUsername}
           inputCode={g.inputCode}
           setInputCode={g.setInputCode}
           message={g.message}
@@ -90,44 +90,44 @@ function App() {
     <div className="game">
       <div className="table">
 
-       <div className="top-bar">
-  <div className="top-brand">
-    <strong>TONGITS</strong>
-    <span className="top-score">
-  {g.myName} {g.scoreboard.me} – {g.scoreboard.opp} {g.opponentName}
-  {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
-</span>
-  </div>
+        <div className="top-bar">
+          <div className="top-brand">
+            <strong>TONGITS</strong>
+            <span className="top-score">
+              {g.myName} {g.scoreboard.me} – {g.scoreboard.opp} {g.opponentName}
+              {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
+            </span>
+          </div>
 
-  <button className="room-code" onClick={copyRoomCode} title="Copy room code">
-  ROOM {g.roomCode} {copied ? "✔ COPIED" : "⧉"}
-</button>
+          <button className="room-code" onClick={copyRoomCode} title="Copy room code">
+            ROOM {g.roomCode} {copied ? "✔ COPIED" : "⧉"}
+          </button>
 
-  <div className="top-actions">
-   <EmoteBar
-  onSend={g.sendEmote}
-  open={emoteOpen}
-  onToggle={() => {
-    if (!emoteOpen) g.setChatOpen(false)
-    setEmoteOpen(o => !o)
-  }}
-  onClose={() => setEmoteOpen(false)}
-/>
-    <ChatBox
-  messages={g.chatMessages}
-  myUid={g.user?.uid}
-  open={g.chatOpen}
-  onToggle={() => {
-    if (!g.chatOpen) setEmoteOpen(false)
-    g.setChatOpen(o => !o)
-  }}
-  unread={g.unread}
-  onSend={g.sendChat}
-  opponentName={g.opponentName}
-/>
-    <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
-  </div>
-</div>
+          <div className="top-actions">
+            <EmoteBar
+              onSend={g.sendEmote}
+              open={emoteOpen}
+              onToggle={() => {
+                if (!emoteOpen) g.setChatOpen(false)
+                setEmoteOpen(o => !o)
+              }}
+              onClose={() => setEmoteOpen(false)}
+            />
+            <ChatBox
+              messages={g.chatMessages}
+              myUid={g.user?.uid}
+              open={g.chatOpen}
+              onToggle={() => {
+                if (!g.chatOpen) setEmoteOpen(false)
+                g.setChatOpen(o => !o)
+              }}
+              unread={g.unread}
+              onSend={g.sendChat}
+              opponentName={g.opponentName}
+            />
+            <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
+          </div>
+        </div>
         {g.activeEmote && getEmote(g.activeEmote.id) && (
           <div
             key={g.activeEmote.ts}
@@ -201,9 +201,9 @@ function App() {
 
             <div className="zone zone-hand">
               <PlayerHand
-              canMeld={canMeld}
- 
-              name={g.myName}
+                canMeld={canMeld}
+
+                name={g.myName}
                 onUngroup={g.ungroupSelected}
                 groups={g.groups}
                 onGroup={g.groupHand}
@@ -244,7 +244,7 @@ function App() {
         <p className="message">{g.message}</p>
 
         <WinModal
-        myName={g.myName} opponentName={g.opponentName}
+          myName={g.myName} opponentName={g.opponentName}
           game={g.game}
           room={g.room}
           currentUserId={g.user?.uid}

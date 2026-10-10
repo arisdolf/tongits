@@ -18,7 +18,8 @@ import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
 import { flyCard, flyMeld } from "../utils/fly"
-import { playCardSound } from "../utils/sound"
+import { playCardSound } from "../utils/sounds"
+import { authedFetch } from "../auth"
 const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 
@@ -338,6 +339,14 @@ export function useTongitsGame() {
       setGroups([])
     }
   }, [gameStatus])
+  /* REPORT FINISHED GAME TO THE ACCOUNT SERVER */
+  useEffect(() => {
+    if (gameStatus !== "finished" || !user || user.isAnonymous || !roomCode) return
+    authedFetch("/api/game-result", {
+      method: "POST",
+      body: JSON.stringify({ roomCode })
+    }).catch(() => { })
+  }, [gameStatus])
 
   useEffect(() => {
     if (newlyDrawnCard && !myHand.includes(newlyDrawnCard)) setNewlyDrawnCard(null)
@@ -472,13 +481,13 @@ export function useTongitsGame() {
         roomData.player1 === currentUser.uid ||
         roomData.player2 === currentUser.uid
 
-     if (isMember) {
-  await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
-  setRoomCode(code)
-  setMessage("Rejoined room")
-  return
-}
-      
+      if (isMember) {
+        await set(ref(database, "rooms/" + code + "/names/" + currentUser.uid), cleanName())
+        setRoomCode(code)
+        setMessage("Rejoined room")
+        return
+      }
+
       if (roomData.player2) {
         notify(
           roomData.game?.status === "playing"
@@ -490,9 +499,9 @@ export function useTongitsGame() {
       }
 
       await update(ref(database, "rooms/" + code), {
-  player2: currentUser.uid,
-  ["names/" + currentUser.uid]: cleanName()
-})
+        player2: currentUser.uid,
+        ["names/" + currentUser.uid]: cleanName()
+      })
       setRoomCode(code)
       setMessage("Joined room!")
 
@@ -542,7 +551,7 @@ export function useTongitsGame() {
 
     await set(ref(database, "rooms/" + code + "/hands/" + player1), player1Hand)
     await set(ref(database, "rooms/" + code + "/hands/" + player2), player2Hand)
-   
+
     await remove(ref(database, "rooms/" + code + "/rematch"))
     await set(ref(database, "rooms/" + code + "/game"), gameData)
   }
@@ -688,11 +697,11 @@ export function useTongitsGame() {
     applyWinIfEmpty(updates, newHand)
 
     flyMeld({
-  sources: cards.map(c => $card(c)),
-  slots: cards.map(c => newMeld.cards.indexOf(c)),
-  getTarget: () => $(`[data-meld-id="${newMeld.id}"]`),
-  getFallback: () => $(".meld-list")
-})
+      sources: cards.map(c => $card(c)),
+      slots: cards.map(c => newMeld.cards.indexOf(c)),
+      getTarget: () => $(`[data-meld-id="${newMeld.id}"]`),
+      getFallback: () => $(".meld-list")
+    })
 
     await update(ref(database, "rooms/" + roomCode), updates)
 
@@ -1068,27 +1077,27 @@ export function useTongitsGame() {
     if (oldIndex === -1 || newIndex === -1) return
 
     const reordered = arrayMove(myHand, oldIndex, newIndex)
-const dragged = active.id
+    const dragged = active.id
 
-// groups survive the drag. The dragged card leaves its old group,
-// and joins a group only if you drop it onto one of that group's cards.
-const targetGroup = activeGroups.findIndex(g => g.includes(over.id))
+    // groups survive the drag. The dragged card leaves its old group,
+    // and joins a group only if you drop it onto one of that group's cards.
+    const targetGroup = activeGroups.findIndex(g => g.includes(over.id))
 
-let nextGroups = activeGroups.map(g => g.filter(c => c !== dragged))
-if (targetGroup !== -1) nextGroups[targetGroup] = [...nextGroups[targetGroup], dragged]
+    let nextGroups = activeGroups.map(g => g.filter(c => c !== dragged))
+    if (targetGroup !== -1) nextGroups[targetGroup] = [...nextGroups[targetGroup], dragged]
 
-nextGroups = nextGroups
-  .map(g => [...g].sort((a, b) => reordered.indexOf(a) - reordered.indexOf(b)))
-  .filter(g => g.length >= 2)
+    nextGroups = nextGroups
+      .map(g => [...g].sort((a, b) => reordered.indexOf(a) - reordered.indexOf(b)))
+      .filter(g => g.length >= 2)
 
-// keep each group contiguous: loose cards first, then the groups
-const groupedSet = new Set(nextGroups.flat())
-const rest = reordered.filter(c => !groupedSet.has(c))
-const finalHand = [...rest, ...nextGroups.flat()]
+    // keep each group contiguous: loose cards first, then the groups
+    const groupedSet = new Set(nextGroups.flat())
+    const rest = reordered.filter(c => !groupedSet.has(c))
+    const finalHand = [...rest, ...nextGroups.flat()]
 
-setSortMode(null)
-setGroups(nextGroups)
-await applySortedHand(finalHand)
+    setSortMode(null)
+    setGroups(nextGroups)
+    await applySortedHand(finalHand)
   }
 
   /* SORT */
@@ -1124,13 +1133,13 @@ await applySortedHand(finalHand)
     myStreak: myScore.streak || 0
   }
 
- const myName = room?.names?.[user?.uid] || "You"
-const opponentName = room?.names?.[opponentUid] || "Opponent"
+  const myName = room?.names?.[user?.uid] || "You"
+  const opponentName = room?.names?.[opponentUid] || "Opponent"
 
-const starterName =
-  game && user
-    ? game.starter === user.uid ? myName : opponentName
-    : ""
+  const starterName =
+    game && user
+      ? game.starter === user.uid ? myName : opponentName
+      : ""
 
   const discardPile = game?.discard || []
 

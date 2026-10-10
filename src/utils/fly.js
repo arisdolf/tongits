@@ -1,4 +1,4 @@
-import { playCardSound } from "./sound"
+import { playCardSound } from "./sounds"
 export function flyCard({ 
   source,            // element whose contents get cloned
   fromRect,          // optional: start rect (e.g. drag position)

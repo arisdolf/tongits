@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import "../styles/Chat.css"
 
-function ChatBox({ messages, myUid, open, onToggle, unread, onSend, opponentName =Opponent}) {
+function ChatBox({ messages, myUid, open, onToggle, unread, onSend, opponentName = "Opponent"}) {
   const [text, setText] = useState("")
   const endRef = useRef(null)
 

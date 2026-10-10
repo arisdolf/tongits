@@ -4,34 +4,30 @@
  * a roomCode exists.
  */
 import "../styles/Lobby.css"
+import AuthBox from "./AuthBox"
+
 function Lobby({
-   username,
-  setUsername,
-  inputCode,
-  setInputCode,
-  message,
-  onCreateRoom,
-  onJoinRoom
+   user, username, setUsername, inputCode, setInputCode,
+  message, onCreateRoom, onJoinRoom
 }) {
-
+  const loggedIn = !!user && !user.isAnonymous
   return (
-    <div className="lobby">
+      <div className="lobby">
+      <h1 className="title">TONGITS</h1>
+      <p className="subtitle">Play Tongits with someone anywhere</p>
 
-      <h1 className="title">
-        TONGITS
-      </h1>
+      <AuthBox firebaseUser={user} setUsername={setUsername} />
 
-      <p className="subtitle">
-        Play Tongits with someone anywhere
-      </p>
-      <div className="name-area">
-  <input
-    value={username}
-    onChange={e => setUsername(e.target.value)}
-    placeholder="your name"
-    maxLength={12}
-  />
-</div>
+      {!loggedIn && (
+        <div className="name-area">
+          <input
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            placeholder="your name"
+            maxLength={12}
+          />
+        </div>
+      )}
       <div className="room-buttons">
         <button onClick={onCreateRoom}>
           Create Room

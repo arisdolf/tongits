@@ -1,7 +1,13 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp } from "firebase/app"
 import { getDatabase, connectDatabaseEmulator } from "firebase/database"
-import { getAuth, signInAnonymously, connectAuthEmulator } from "firebase/auth"
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  connectAuthEmulator
+} from "firebase/auth"
+
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -26,10 +32,14 @@ export const database = getDatabase(app)
 export const auth = getAuth(app)
 
 if (import.meta.env.VITE_LAN === "true") {
-  const host = window.location.hostname // the PC's LAN IP, as seen by every device
+  const host = window.location.hostname
   connectDatabaseEmulator(database, host, 9000)
   connectAuthEmulator(auth, `http://${host}:9099`, { disableWarnings: true })
 }
 
 
 signInAnonymously(auth)
+
+onAuthStateChanged(auth, user => {
+  if (!user) signInAnonymously(auth)
+})
