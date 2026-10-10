@@ -15,7 +15,7 @@ export const EMOTES = [
   { id: "sticker12",  type: "image", content: "emotes/sticker12.jpg" },
   { id: "sticker13",  type: "image", content: "emotes/sticker13.jpg" },
   { id: "sticker14",  type: "image", content: "emotes/sticker14.jpg" },
-  { id: "sticker15",  type: "image", content: "emotes/sticker15.jpg" }
+  { id: "sticker15",  type: "image", content: "emotes/sticker15.jpg" },
   { id: "sticker16",  type: "image", content: "emotes/sticker16.jpg" },
   { id: "sticker17",  type: "image", content: "emotes/sticker17.webp" },
   { id: "sticker18",  type: "image", content: "emotes/sticker18.webp" },
