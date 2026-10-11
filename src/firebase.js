@@ -38,7 +38,7 @@ if (import.meta.env.VITE_LAN === "true") {
 }
 
 
-signInAnonymously(auth)
+
 
 onAuthStateChanged(auth, user => {
   if (!user) signInAnonymously(auth)

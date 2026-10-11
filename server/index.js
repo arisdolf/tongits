@@ -2,15 +2,16 @@ import "dotenv/config"
 import express from "express"
 import cors from "cors"
 import bcrypt from "bcrypt"
-import admin from "firebase-admin"
+import { initializeApp, cert } from "firebase-admin/app"
+import { getAuth } from "firebase-admin/auth"
+import { getDatabase } from "firebase-admin/database"
 import pg from "pg"
 import rateLimit from "express-rate-limit"
 
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
+initializeApp({
+  credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
   databaseURL: process.env.FIREBASE_DATABASE_URL
 })
-
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL })
 
 const app = express()
@@ -50,7 +51,7 @@ app.post("/api/register", authLimiter, async (req, res) => {
       [username, hash]
     )
     const user = rows[0]
-    const token = await admin.auth().createCustomToken(toUid(user.id), { username })
+    const token = await getAuth().createCustomToken(toUid(user.id), { username })
     res.json({ token, user: publicUser(user) })
   } catch (e) {
     if (e.code === "23505")
@@ -74,8 +75,7 @@ app.post("/api/login", authLimiter, async (req, res) => {
     const ok = user && (await bcrypt.compare(password, user.password_hash))
     if (!ok) return res.status(401).json({ error: "Wrong username or password" })
 
-    const token = await admin
-      .auth()
+    const token = await getAuth()
       .createCustomToken(toUid(user.id), { username: user.username })
     res.json({ token, user: publicUser(user) })
   } catch (e) {
@@ -97,7 +97,7 @@ app.get("/api/username-available", async (req, res) => {
 async function requireAccount(req, res, next) {
   try {
     const token = req.headers.authorization?.split("Bearer ")[1]
-    const decoded = await admin.auth().verifyIdToken(token)
+    const decoded = await getAuth().verifyIdToken(token)
     if (decoded.firebase.sign_in_provider !== "custom") return res.sendStatus(401)
     req.uid = decoded.uid
     req.userId = Number(decoded.uid.slice(1))
@@ -129,7 +129,7 @@ app.post("/api/game-result", requireAccount, async (req, res) => {
   if (!/^[A-Z0-9]{6}$/.test(code)) return res.status(400).json({ error: "Bad room code" })
 
   try {
-    const snap = await admin.database().ref("rooms/" + code).get()
+    const snap = await getDatabase().ref("rooms/" + code).get()
     const room = snap.val()
     if (!room || !room.game) return res.status(404).json({ error: "Room not found" })
     if (room.player1 !== req.uid && room.player2 !== req.uid)
@@ -138,7 +138,7 @@ app.post("/api/game-result", requireAccount, async (req, res) => {
       return res.status(400).json({ error: "Game not finished" })
 
     // count each player once per game (a rematch replaces game/, resetting this flag)
-    const flag = admin.database().ref(`rooms/${code}/game/counted/${req.uid}`)
+    const flag = getDatabase().ref(`rooms/${code}/game/counted/${req.uid}`)
     const tx = await flag.transaction(cur => (cur ? undefined : true))
     if (!tx.committed) return res.json({ already: true })
 
