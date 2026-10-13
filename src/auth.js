@@ -6,7 +6,7 @@ import {
   updateProfile,
   deleteUser
 } from "firebase/auth"
-import { ref, get, set, runTransaction } from "firebase/database"
+import { ref, get, set, remove, runTransaction } from "firebase/database"
 
 const key = name => name.trim().toLowerCase()
 const toEmail = name => key(name) + "@tongits.app"
@@ -23,17 +23,19 @@ export async function register(username, password) {
   if (password.length < 8)
     throw new Error("Password must be at least 8 characters")
 
-  const cred = await createUserWithEmailAndPassword(auth, toEmail(username), password)
+  // random email, so an old name can never collide with an existing Auth account
+  const email = `u${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}@tongits.app`
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
   const uid = cred.user.uid
 
   try {
-    // rules reject this if the name already exists, so two people can't grab it at once
     await set(ref(database, "usernames/" + key(username)), uid)
   } catch {
     await deleteUser(cred.user)
     throw new Error("That username is taken, please choose another")
   }
 
+  await set(ref(database, "emails/" + uid), email)
   await updateProfile(cred.user, { displayName: username })
   await set(ref(database, "users/" + uid), {
     username, wins: 0, losses: 0, ties: 0, gamesPlayed: 0, bestStreak: 0
@@ -42,11 +44,63 @@ export async function register(username, password) {
 }
 
 export async function login(username, password) {
+  let email = toEmail(username) // old accounts fall back to this
+
   try {
-    await signInWithEmailAndPassword(auth, toEmail(username), password)
+    const uidSnap = await get(ref(database, "usernames/" + key(username)))
+    if (uidSnap.exists()) {
+      const emailSnap = await get(ref(database, "emails/" + uidSnap.val()))
+      if (emailSnap.exists()) email = emailSnap.val()
+    }
+  } catch { /* use the fallback */ }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password)
   } catch {
     throw new Error("Wrong username or password")
   }
+}
+
+export async function changeUsername(newName) {
+  newName = newName.trim()
+  if (!/^[A-Za-z0-9_]{3,12}$/.test(newName))
+    throw new Error("Username: 3-12 letters, numbers or _")
+
+  const user = auth.currentUser
+  const uid = user.uid
+
+  const oldSnap = await get(ref(database, `users/${uid}/username`))
+  const oldName = oldSnap.val() || ""
+
+  if (newName === oldName) throw new Error("That's already your username")
+
+  const sameKey = key(newName) === key(oldName) // only the capitalisation changed
+
+  // claim the new name first (rules reject it if someone already has it)
+  if (!sameKey) {
+    try {
+      await set(ref(database, "usernames/" + key(newName)), uid)
+    } catch {
+      throw new Error("That username is taken, please choose another")
+    }
+  }
+
+  try {
+    // remember the real login email (old accounts don't have this yet)
+    await set(ref(database, "emails/" + uid), user.email)
+    await set(ref(database, `users/${uid}/username`), newName)
+    await updateProfile(user, { displayName: newName })
+  } catch {
+    if (!sameKey) await remove(ref(database, "usernames/" + key(newName))).catch(() => {})
+    throw new Error("Couldn't change your username, try again")
+  }
+
+  // release the old name
+  if (!sameKey && oldName) {
+    await remove(ref(database, "usernames/" + key(oldName))).catch(() => {})
+  }
+
+  return newName
 }
 
 export async function logOut() {

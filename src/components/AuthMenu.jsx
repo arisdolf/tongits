@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react"
-import { register, login, logOut, getMyProfile, isUsernameAvailable } from "../auth"
+import { register, login, logOut, getMyProfile, isUsernameAvailable, changeUsername } from "../auth"
 import "../styles/AuthMenu.css"
 
 function AuthMenu({ firebaseUser, setUsername }) {
+  const [profileOpen, setProfileOpen] = useState(false)
+const [newName, setNewName] = useState("")
+const [nameError, setNameError] = useState("")
+const [nameMsg, setNameMsg] = useState("")
+const [nameBusy, setNameBusy] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [mode, setMode] = useState("login")
@@ -14,6 +19,11 @@ function AuthMenu({ firebaseUser, setUsername }) {
   const [account, setAccount] = useState(null)
 
   const loggedIn = !!firebaseUser && !firebaseUser.isAnonymous
+
+  useEffect(() => {
+  if (!loggedIn || !(menuOpen || profileOpen)) return
+  getMyProfile().then(me => me && setAccount(me)).catch(() => {})
+}, [menuOpen, profileOpen])
 
   // load the profile whenever we become logged in
   useEffect(() => {
@@ -57,6 +67,23 @@ function AuthMenu({ firebaseUser, setUsername }) {
     setModalOpen(true)
   }
 
+  async function handleRename(e) {
+  e.preventDefault()
+  setNameError("")
+  setNameMsg("")
+  setNameBusy(true)
+  try {
+    const updated = await changeUsername(newName)
+    setAccount(a => ({ ...a, username: updated }))
+    setUsername(updated)
+    setNewName("")
+    setNameMsg("Username changed!")
+  } catch (err) {
+    setNameError(err.message)
+  }
+  setNameBusy(false)
+}
+
   async function submit(e) {
     e.preventDefault()
     setError("")
@@ -79,30 +106,78 @@ function AuthMenu({ firebaseUser, setUsername }) {
 
   /* ---------- LOGGED IN: username chip + dropdown ---------- */
   if (loggedIn) {
-    return (
-      <div className="auth-menu">
-        {menuOpen && <div className="auth-backdrop" onClick={() => setMenuOpen(false)} />}
+  const games = account?.gamesPlayed || 0
+  const winRate = games > 0 ? Math.round((account.wins / games) * 100) : 0
 
-        <button className="auth-chip" onClick={() => setMenuOpen(o => !o)}>
-          👤 {account?.username || "..."} ▾
-        </button>
+  return (
+    <div className="auth-menu">
+      {menuOpen && <div className="auth-backdrop" onClick={() => setMenuOpen(false)} />}
 
-        {menuOpen && (
-          <div className="auth-dropdown">
-            <p className="auth-name"><strong>{account?.username || "..."}</strong></p>
+      <button className="auth-chip" onClick={() => setMenuOpen(o => !o)}>
+        👤 {account?.username || "..."} ▾
+      </button>
+
+      {menuOpen && (
+        <div className="auth-dropdown">
+          <p className="auth-name"><strong>{account?.username || "..."}</strong></p>
+          {account && (
+            <p className="auth-stats">
+              {account.wins}W · {account.losses}L · {account.ties}T
+              <br />
+              best streak {account.bestStreak}
+            </p>
+          )}
+          <button
+            className="auth-profile-btn"
+            onClick={() => { setMenuOpen(false); setNameError(""); setNameMsg(""); setProfileOpen(true) }}
+          >
+            Stats &amp; profile
+          </button>
+          <button className="auth-logout" onClick={handleLogOut}>Log out</button>
+        </div>
+      )}
+
+      {profileOpen && (
+        <div className="auth-overlay" onClick={() => setProfileOpen(false)}>
+          <div className="auth-modal" onClick={e => e.stopPropagation()}>
+            <div className="auth-tabs">
+              <strong className="profile-title">MY PROFILE</strong>
+              <button type="button" className="auth-x" onClick={() => setProfileOpen(false)} aria-label="Close">✕</button>
+            </div>
+
+            <p className="profile-name">{account?.username || "..."}</p>
+
             {account && (
-              <p className="auth-stats">
-                {account.wins}W · {account.losses}L · {account.ties}T
-                <br />
-                best streak {account.bestStreak}
-              </p>
+              <div className="stat-grid">
+                <div><b>{account.wins}</b><span>Wins</span></div>
+                <div><b>{account.losses}</b><span>Losses</span></div>
+                <div><b>{account.ties}</b><span>Ties</span></div>
+                <div><b>{games}</b><span>Games</span></div>
+                <div><b>{winRate}%</b><span>Win rate</span></div>
+                <div><b>{account.bestStreak}</b><span>Best streak</span></div>
+              </div>
             )}
-            <button className="auth-logout" onClick={handleLogOut}>Log out</button>
+
+            <form className="rename-form" onSubmit={handleRename}>
+              <input
+                placeholder="new username"
+                value={newName}
+                maxLength={12}
+                onChange={e => setNewName(e.target.value)}
+                required
+              />
+              {nameError && <p className="auth-error">{nameError}</p>}
+              {nameMsg && <p className="auth-ok">{nameMsg}</p>}
+              <button type="submit" className="auth-submit" disabled={nameBusy || !newName.trim()}>
+                Change username
+              </button>
+            </form>
           </div>
-        )}
-      </div>
-    )
-  }
+        </div>
+      )}
+    </div>
+  )
+}
 
   /* ---------- LOGGED OUT: button + popup ---------- */
   return (
