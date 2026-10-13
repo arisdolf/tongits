@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { register, login, logOut, authedFetch } from "../auth"
+import { register, login, logOut, getMyProfile, isUsernameAvailable } from "../auth"
 import "../styles/AuthMenu.css"
 
 function AuthMenu({ firebaseUser, setUsername }) {
@@ -18,7 +18,7 @@ function AuthMenu({ firebaseUser, setUsername }) {
   // load the profile whenever we become logged in
   useEffect(() => {
     if (!loggedIn) { setAccount(null); return }
-    authedFetch("/api/me")
+    getMyProfile()
       .then(me => { setAccount(me); setUsername(me.username) })
       .catch(() => {})
   }, [loggedIn, firebaseUser?.uid])
@@ -38,18 +38,18 @@ function AuthMenu({ firebaseUser, setUsername }) {
 
   // live "is this username taken?" check (register mode only)
   useEffect(() => {
+  if (mode !== "register" || !/^[A-Za-z0-9_]{3,12}$/.test(name)) {
     setTaken(false)
-    if (mode !== "register" || !/^[A-Za-z0-9_]{3,12}$/.test(name)) return
-
-    const timer = setTimeout(() => {
-      fetch(import.meta.env.VITE_API_URL + "/api/username-available?name=" + encodeURIComponent(name))
-        .then(r => r.json())
-        .then(d => setTaken(!d.available))
-        .catch(() => {})
-    }, 400)
-
-    return () => clearTimeout(timer)
-  }, [name, mode])
+    return
+  }
+  let cancelled = false
+  const t = setTimeout(() => {
+    isUsernameAvailable(name)
+      .then(ok => { if (!cancelled) setTaken(!ok) })
+      .catch(() => {})
+  }, 300)
+  return () => { cancelled = true; clearTimeout(t) }
+}, [name, mode])
 
   function openModal(m) {
     setMode(m)

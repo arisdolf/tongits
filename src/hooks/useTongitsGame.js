@@ -19,7 +19,7 @@ import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core
 import { arrayMove } from "@dnd-kit/sortable"
 import { flyCard, flyMeld } from "../utils/fly"
 import { playCardSound } from "../utils/sounds"
-import { authedFetch } from "../auth"
+import { recordGameResult } from "../auth"
 const $ = selector => document.querySelector(selector)
 const $card = card => document.querySelector(`[data-card="${card}"]`)
 
@@ -342,10 +342,7 @@ export function useTongitsGame() {
   /* REPORT FINISHED GAME TO THE ACCOUNT SERVER */
   useEffect(() => {
     if (gameStatus !== "finished" || !user || user.isAnonymous || !roomCode) return
-    authedFetch("/api/game-result", {
-      method: "POST",
-      body: JSON.stringify({ roomCode })
-    }).catch(() => { })
+recordGameResult(roomCode, game, room).catch(() => {})
   }, [gameStatus])
 
   useEffect(() => {
