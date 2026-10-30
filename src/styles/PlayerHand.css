@@ -75,24 +75,6 @@
   }
 }
 
-.new-badge {
-  position: absolute;
-  top: -8px;
-  right: -6px;
-  z-index: 15;
-
-  background: #4fd67a;
-  color: #07220f;
-
-  font-size: 8px;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-
-  padding: 2px 5px;
-  border-radius: 6px;
-
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
 
 /* DRAGGING — original stays as a faded placeholder, the ghost follows the pointer */
 
@@ -210,12 +192,7 @@
     margin: 2px -6px;
   }
 }
-.new-badge {
-  top: -10px;
-  right: auto;
-  left: 50%;
-  transform: translateX(-50%);
-}
+
 
 .hand-break { flex-basis: 100%; height: 0; }
 
@@ -234,3 +211,5 @@
 .group-3 { --group-color: #ff9a85; }
 
 .my-hand .card.group-start { margin-left: 14px; }
+
+.deal-hidden { visibility: hidden; }

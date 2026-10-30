@@ -12,8 +12,8 @@ function PlayerHand({
   starterName, hasStarter,
   groups = [], onGroup, onUngroup,
   canMeld = false,
-  name = "you"
-    
+  name = "you",
+  dealtCount = null
 }) {
 
   const groupOf = {}
@@ -60,6 +60,7 @@ function PlayerHand({
             <Fragment key={card}>
               {index === firstGroupedIndex && index > 0 && <div className="hand-break" />}
               <SortableCard
+              dealHidden={dealtCount !== null && index >= dealtCount}
                 id={card}
                 card={card}
                 index={index}

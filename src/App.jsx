@@ -88,8 +88,9 @@ function App() {
 
   return (
     <div className="game">
-      <div className="table">
-
+  
+        <div className={"table" + (g.dealing ? " dealing" : "")}>
+        
         <div className="top-bar">
           <div className="top-brand">
             <strong>TONGITS</strong>
@@ -137,6 +138,7 @@ function App() {
           </div>
         )}
 
+        
         <DndContext
           sensors={g.sensors}
           collisionDetection={collisionDetection}
@@ -176,7 +178,8 @@ function App() {
             <div className="zone zone-center">
 
               <DeckAndDiscard
-                deckCount={g.game?.deck?.length || 0}
+              deckCount={g.deckCount}
+            
                 drawing={g.drawing}
                 onDraw={g.drawCard}
                 canDraw={
@@ -191,7 +194,8 @@ function App() {
               />
 
               <div className="turn-message">
-                {g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
+    
+                {g.dealing ? "DEALING..." : g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
               </div>
 
 
@@ -202,7 +206,7 @@ function App() {
             <div className="zone zone-hand">
               <PlayerHand
                 canMeld={canMeld}
-
+                dealtCount={g.dealtCount}
                 name={g.myName}
                 onUngroup={g.ungroupSelected}
                 groups={g.groups}

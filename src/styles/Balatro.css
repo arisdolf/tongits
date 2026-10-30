@@ -296,7 +296,7 @@ button:disabled {
     0 20px 0 -4px rgba(0, 0, 0, 0.3);
 }
 
-.new-badge { background: var(--blue); color: #fff; font-family: "Pixelify Sans", monospace; }
+
 
 .drag-ghost {
   transform: rotate(6deg) scale(1.12);

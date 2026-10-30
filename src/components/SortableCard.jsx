@@ -5,7 +5,8 @@ import PlayingCard from "./PlayingCard"
 function SortableCard({
   id, card, index, selected, isNew, onSelect,
   groupIndex = -1,
-  groupStart = false
+  groupStart = false,
+  dealHidden = false
 
 }) {
 
@@ -37,6 +38,7 @@ function SortableCard({
       {...listeners}
       data-card={card}
       className={
+        (dealHidden ? "deal-hidden " : "") +
         "card my-card " +
         (selected ? "selected-card " : "") +
         (isDragging ? "dragging-card " : "") +
@@ -48,7 +50,6 @@ function SortableCard({
       onClick={() => onSelect(card)}
     >
       <div className="card-face">
-        {isNew && <span className="new-badge">NEW</span>}
         <PlayingCard card={card} />
       </div>
     </button>

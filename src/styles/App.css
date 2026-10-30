@@ -206,3 +206,6 @@
   position: relative;
   z-index: 60;   /* overlay is 50 */
 }
+
+.table.dealing .zone-hand,
+.table.dealing .zone-center { pointer-events: none; }

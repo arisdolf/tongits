@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import { database, auth } from "../firebase"
 import { ref, set, get, onValue, update, onDisconnect, remove, serverTimestamp, push, query, limitToLast } from "firebase/database"
 import { onAuthStateChanged } from "firebase/auth"
@@ -51,6 +51,11 @@ export function useTongitsGame() {
   const [activeEmote, setActiveEmote] = useState(null)
   const [groups, setGroups] = useState([])
   const [user, setUser] = useState(null)
+  const [deal, setDeal] = useState(null)            // { me, opp } cards dealt so far
+  const dealInfoRef = useRef({ mySize: 13, oppSize: 12 })
+  const myHandRef = useRef([])
+  myHandRef.current = myHand
+  const prevDiscardLenRef = useRef(0)
   const prevDeckLenRef = useRef(null)
   const hasLoadedRoomRef = useRef(false)
   const hadPlayer2Ref = useRef(false)
@@ -93,6 +98,7 @@ export function useTongitsGame() {
     prevDiscardRef.current = null
     setOpponentLeft(false)
     setGroups([])
+    setDeal(null)
   }, [roomCode])
 
   useEffect(() => {
@@ -337,12 +343,13 @@ export function useTongitsGame() {
       setSelectedCards([])
       setNewlyDrawnCard(null)
       setGroups([])
+     
     }
   }, [gameStatus])
   /* REPORT FINISHED GAME TO THE ACCOUNT SERVER */
   useEffect(() => {
     if (gameStatus !== "finished" || !user || user.isAnonymous || !roomCode) return
-recordGameResult(roomCode, game, room).catch(() => {})
+    recordGameResult(roomCode, game, room).catch(() => { })
   }, [gameStatus])
 
   useEffect(() => {
@@ -376,6 +383,77 @@ recordGameResult(roomCode, game, room).catch(() => {})
       })
     }
   }, [game?.discard])
+
+
+  /* DEAL ANIMATION — new round: cards fly out of the deck one by one */
+  const dealing = !!deal
+
+  // layout effect = runs before the browser paints, so the full hand never flashes
+  useLayoutEffect(() => {
+    if (gameStatus !== "playing" || !game || !user) return
+
+    // only a fresh round (27 cards left in the deck, nothing played yet)
+    const fresh =
+      game.deck?.length === 27 &&
+      !game.discard?.length &&
+      !game.melds?.length
+    if (!fresh) return
+
+    const mySize = game.starter === user.uid ? 13 : 12
+    dealInfoRef.current = { mySize, oppSize: 25 - mySize }
+    setNewlyDrawnCard(null)
+    setDeal({ me: 0, opp: 0 })
+  }, [gameStatus, user?.uid])
+
+  useEffect(() => {
+    if (!dealing) return
+
+    const { mySize, oppSize } = dealInfoRef.current
+    let me = 0, opp = 0, turn = 0
+    let endTimer
+
+    const timer = setInterval(() => {
+      if (me >= mySize && opp >= oppSize) {
+        clearInterval(timer)
+        endTimer = setTimeout(() => setDeal(null), 450)
+        return
+      }
+
+      // alternate: me, opponent, me, opponent...
+      const toMe = me < mySize && (turn % 2 === 0 || opp >= oppSize)
+      turn++
+
+      if (toMe) {
+        me++
+        const idx = me - 1
+        flyCard({
+          source: $('[data-fly="deck"]'),
+          getTarget: () => $card(myHandRef.current[idx]),
+          hideTarget: true,
+          duration: 320
+        })
+      } else {
+        opp++
+        flyCard({
+          source: $('[data-fly="deck"]'),
+          getTarget: () => $(".opponent .cards"),
+          duration: 320
+        })
+      }
+
+      setDeal({ me, opp })
+    }, 65)
+
+    return () => { clearInterval(timer); clearTimeout(endTimer) }
+  }, [dealing])
+
+  /* NEW tag: clear it when a card lands on the discard pile */
+  const discardLen = game?.discard?.length ?? 0
+  useEffect(() => {
+    if (discardLen > prevDiscardLenRef.current) setNewlyDrawnCard(null)
+    prevDiscardLenRef.current = discardLen
+  }, [discardLen])
+
 
   /* OPPONENT DRAW ANIMATION */
   useEffect(() => {
@@ -422,6 +500,7 @@ recordGameResult(roomCode, game, room).catch(() => {})
     setSelectedCards([])
     setSortMode(null)
     setGroups([])
+    setDeal(null)
     setPresence({})
     setMessage("You left the room")
   }
@@ -614,6 +693,7 @@ recordGameResult(roomCode, game, room).catch(() => {})
 
     setSortMode(null)
     setGroups(next)
+    
     setSelectedCards([])
     await applySortedHand([...rest, ...next.flat()])
     setMessage("Cards grouped")
@@ -622,6 +702,7 @@ recordGameResult(roomCode, game, room).catch(() => {})
   function ungroupSelected() {
     if (selectedCards.length === 0) {
       setGroups([])
+     
       setMessage("Groups cleared")
       return
     }
@@ -1109,6 +1190,7 @@ recordGameResult(roomCode, game, room).catch(() => {})
   function sortHandBySuit() {
     setSortMode("suit")
     setGroups([])
+   
     applySortedHand(sortHandByMode(myHand, "suit"))
     setMessage("Hand sorted by suit")
   }
@@ -1116,6 +1198,7 @@ recordGameResult(roomCode, game, room).catch(() => {})
   function sortHandByRank() {
     setSortMode("rank")
     setGroups([])
+    
     applySortedHand(sortHandByMode(myHand, "rank"))
     setMessage("Hand sorted highest to lowest")
   }
@@ -1144,7 +1227,10 @@ recordGameResult(roomCode, game, room).catch(() => {})
     roomCode, inputCode, setInputCode, message, toast,
     dismissToast: () => setToast(null),
     room, game, myHand, opponentHand,
-    opponentCount: opponentHand.length,
+    opponentCount: deal ? deal.opp : opponentHand.length,
+    dealing: !!deal,
+    dealtCount: deal ? deal.me : null,
+    deckCount: (game?.deck?.length || 0) + (deal ? 25 - deal.me - deal.opp : 0),
     selectedCards, setSelectedCards, drawing,
     showDiscardHistory, setShowDiscardHistory,
     sortMenuOpen, setSortMenuOpen, newlyDrawnCard,
