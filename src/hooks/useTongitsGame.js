@@ -390,20 +390,25 @@ export function useTongitsGame() {
 
   // layout effect = runs before the browser paints, so the full hand never flashes
   useLayoutEffect(() => {
-    if (gameStatus !== "playing" || !game || !user) return
+  if (gameStatus !== "playing" || !game || !user || !game.dealId) return
 
-    // only a fresh round (27 cards left in the deck, nothing played yet)
-    const fresh =
-      game.deck?.length === 27 &&
-      !game.discard?.length &&
-      !game.melds?.length
-    if (!fresh) return
+  // already dealt this round in this browser (page reload)? skip
+  const key = "dealt:" + roomCode
+  if (localStorage.getItem(key) === game.dealId) return
 
-    const mySize = game.starter === user.uid ? 13 : 12
-    dealInfoRef.current = { mySize, oppSize: 25 - mySize }
-    setNewlyDrawnCard(null)
-    setDeal({ me: 0, opp: 0 })
-  }, [gameStatus, user?.uid])
+  const fresh =
+    game.deck?.length === 27 &&
+    !game.discard?.length &&
+    !game.melds?.length
+  if (!fresh) return
+
+  localStorage.setItem(key, game.dealId)
+
+  const mySize = game.starter === user.uid ? 13 : 12
+  dealInfoRef.current = { mySize, oppSize: 25 - mySize }
+  setNewlyDrawnCard(null)
+  setDeal({ me: 0, opp: 0 })
+}, [gameStatus, game?.dealId, user?.uid])
 
   useEffect(() => {
     if (!dealing) return
@@ -423,23 +428,25 @@ export function useTongitsGame() {
       const toMe = me < mySize && (turn % 2 === 0 || opp >= oppSize)
       turn++
 
-      if (toMe) {
-        me++
-        const idx = me - 1
-        flyCard({
-          source: $('[data-fly="deck"]'),
-          getTarget: () => $card(myHandRef.current[idx]),
-          hideTarget: true,
-          duration: 320
-        })
-      } else {
-        opp++
-        flyCard({
-          source: $('[data-fly="deck"]'),
-          getTarget: () => $(".opponent .cards"),
-          duration: 320
-        })
-      }
+     if (toMe) {
+  me++
+  const idx = me - 1
+  flyCard({
+    source: $('[data-fly="deck"]'),
+    getTarget: () => $card(myHandRef.current[idx]),
+    hideTarget: true,
+    duration: 400,      // was 320
+    flip: true          // new
+  })
+} else {
+  // opponent branch: leave exactly as it is (no flip, their cards stay face-down)
+  opp++
+  flyCard({
+    source: $('[data-fly="deck"]'),
+    getTarget: () => $(".opponent .cards"),
+    duration: 320
+  })
+}
 
       setDeal({ me, opp })
     }, 65)
@@ -608,6 +615,9 @@ export function useTongitsGame() {
     }
 
     const gameData = {
+      dealId: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+  deck,
+  discard: [],
       deck,
       discard: [],
       starter,
@@ -997,7 +1007,8 @@ export function useTongitsGame() {
     flyCard({
       source: $('[data-fly="deck"]'),
       getTarget: () => $card(card),
-      hideTarget: true
+      hideTarget: true,
+       flip: true  
     })
     await update(ref(database, "rooms/" + roomCode), updates)
 

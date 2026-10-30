@@ -1,20 +1,25 @@
 import { playCardSound } from "./sounds"
-export function flyCard({ 
+function clean(el) {
+  el.querySelectorAll("*").forEach(n => { n.style.animation = "none" })
+  el.querySelectorAll(".new-badge, .deck-count").forEach(n => n.remove())
+}
+
+export function flyCard({
   source,            // element whose contents get cloned
   fromRect,          // optional: start rect (e.g. drag position)
   getTarget,         // () => element to fly to (retried for ~600ms)
   delay = 0,
   duration = 400,
-  hideTarget = false // hide the real card until the ghost lands
+  hideTarget = false, // hide the real card until the ghost lands
+  flip = false        // show the back first, flip to the target's front
 }) {
   if (!source) return
 
   const from = fromRect || source.getBoundingClientRect()
+  const backHTML = source.innerHTML
   const ghost = document.createElement("div")
-  ghost.innerHTML = source.innerHTML
-  ghost.querySelectorAll("*").forEach(n => { n.style.animation = "none" })
-  ghost.querySelectorAll(".new-badge").forEach(n => n.remove())
-  ghost.querySelectorAll(".new-badge, .deck-count").forEach(n => n.remove())
+  ghost.innerHTML = backHTML
+  clean(ghost)
 
   Object.assign(ghost.style, {
     position: "fixed",
@@ -30,7 +35,7 @@ export function flyCard({
   document.body.appendChild(ghost)
 
   const started = performance.now()
-  
+
   function launch() {
     const target = getTarget()
 
@@ -39,6 +44,35 @@ export function flyCard({
       else ghost.remove()
       return
     }
+
+    // build the two-sided card now that we can see the target's front
+    let flipInner = null
+    if (flip) {
+      const frontHTML = target.querySelector(".card-face")?.innerHTML
+      if (frontHTML) {
+        ghost.innerHTML =
+          '<div><div></div><div></div></div>'
+        flipInner = ghost.firstChild
+        const [backFace, frontFace] = flipInner.children
+        backFace.innerHTML = backHTML
+        frontFace.innerHTML = frontHTML
+        clean(ghost)
+
+        Object.assign(ghost.style, { overflow: "visible", perspective: "700px" })
+        Object.assign(flipInner.style, {
+          position: "absolute", inset: "0", transformStyle: "preserve-3d"
+        })
+        for (const face of [backFace, frontFace]) {
+          Object.assign(face.style, {
+            position: "absolute", inset: "0",
+            backfaceVisibility: "hidden",
+            webkitBackfaceVisibility: "hidden"
+          })
+        }
+        frontFace.style.transform = "rotateY(180deg)"
+      }
+    }
+
     playCardSound(delay)
     const to = target.getBoundingClientRect()
     const prevVisibility = target.style.visibility
@@ -47,6 +81,13 @@ export function flyCard({
     const dx = to.left + to.width / 2 - (from.left + from.width / 2)
     const dy = to.top + to.height / 2 - (from.top + from.height / 2)
     const scale = Math.max(0.4, Math.min(1.2, to.height / from.height))
+
+    if (flipInner) {
+      flipInner.animate(
+        [{ transform: "rotateY(0deg)" }, { transform: "rotateY(180deg)" }],
+        { duration: duration * 0.85, delay, easing: "cubic-bezier(0.45,0,0.25,1)", fill: "both" }
+      )
+    }
 
     const anim = ghost.animate(
       [
@@ -63,8 +104,6 @@ export function flyCard({
     anim.onfinish = done
     anim.oncancel = done
   }
-
-    
 
   launch()
 }
