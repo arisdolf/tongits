@@ -83,6 +83,9 @@ const suitNames = {
   "♣": "Clubs"
 }
 
+const knownPath = {}
+export function rememberCardPath(card, path) { knownPath[card] = path }
+
 export function getCardImagePaths(card) {
   const rank = getCardRank(card)
   const suit = getCardSuit(card)
@@ -90,7 +93,9 @@ export function getCardImagePaths(card) {
   const name = (rankNames[rank] || rank) + "_of_" + suitNames[suit]
   const folder = "cards/CardsFront/" + suitFolders[suit] + "/"
 
-  return ["png", "jpg", "jpeg", "webp"].map(ext => folder + name + "." + ext)
+  const all = ["png", "jpg", "jpeg", "webp"].map(ext => folder + name + "." + ext)
+  const known = knownPath[card]
+  return known ? [known, ...all.filter(p => p !== known)] : all
 }
 
 

@@ -17,7 +17,8 @@ import {
 import { emptyStats, getStat } from "../utils/stats"
 import { PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { arrayMove } from "@dnd-kit/sortable"
-import { flyCard, flyMeld } from "../utils/fly"
+import { flyCard, flyMeld, createDealerDeck } from "../utils/fly"
+import { preloadCards } from "../utils/preload"
 import { playCardSound } from "../utils/sounds"
 import { recordGameResult } from "../auth"
 const $ = selector => document.querySelector(selector)
@@ -69,6 +70,8 @@ export function useTongitsGame() {
     setToast({ id: Date.now(), text, type })
   }
   function warn(text) { notify(text, "warn") }
+
+  useEffect(() => { preloadCards() }, [])
 
   useEffect(() => {
     if (!toast) return
@@ -343,7 +346,7 @@ export function useTongitsGame() {
       setSelectedCards([])
       setNewlyDrawnCard(null)
       setGroups([])
-     
+
     }
   }, [gameStatus])
   /* REPORT FINISHED GAME TO THE ACCOUNT SERVER */
@@ -390,69 +393,106 @@ export function useTongitsGame() {
 
   // layout effect = runs before the browser paints, so the full hand never flashes
   useLayoutEffect(() => {
-  if (gameStatus !== "playing" || !game || !user || !game.dealId) return
+    if (gameStatus !== "playing" || !game || !user || !game.dealId) return
 
-  // already dealt this round in this browser (page reload)? skip
-  const key = "dealt:" + roomCode
-  if (localStorage.getItem(key) === game.dealId) return
+    // already dealt this round in this browser (page reload)? skip
+    const key = "dealt:" + roomCode
+    if (localStorage.getItem(key) === game.dealId) return
 
-  const fresh =
-    game.deck?.length === 27 &&
-    !game.discard?.length &&
-    !game.melds?.length
-  if (!fresh) return
+    const fresh =
+      game.deck?.length === 27 &&
+      !game.discard?.length &&
+      !game.melds?.length
+    if (!fresh) return
 
-  localStorage.setItem(key, game.dealId)
+    localStorage.setItem(key, game.dealId)
 
-  const mySize = game.starter === user.uid ? 13 : 12
-  dealInfoRef.current = { mySize, oppSize: 25 - mySize }
-  setNewlyDrawnCard(null)
-  setDeal({ me: 0, opp: 0 })
-}, [gameStatus, game?.dealId, user?.uid])
+    const mySize = game.starter === user.uid ? 13 : 12
+    dealInfoRef.current = { mySize, oppSize: 25 - mySize }
+    setNewlyDrawnCard(null)
+    setDeal({ me: 0, opp: 0 })
+  }, [gameStatus, game?.dealId, user?.uid])
 
   useEffect(() => {
-    if (!dealing) return
+  if (!dealing) return
 
-    const { mySize, oppSize } = dealInfoRef.current
+  const { mySize, oppSize } = dealInfoRef.current
+  let cancelled = false
+  let timer
+  let dealer = null
+
+  async function finish() {
+    await new Promise(r => setTimeout(r, 450))   // let the last card land
+    if (cancelled) return
+    if (dealer) await dealer.home()
+    if (cancelled) return
+    dealer?.remove()
+    dealer = null
+    setDeal(null)
+  }
+
+  async function run() {
+    // 1. wait for the images (max 2.5s so a slow network can't stall the game)
+    await Promise.race([preloadCards(), new Promise(r => setTimeout(r, 2500))])
+    if (cancelled) return
+
+    // 2. deck slides to the middle
+    dealer = createDealerDeck($('[data-fly="deck"]'))
+    if (dealer) {
+      await dealer.toCenter()
+      if (cancelled) return
+    }
+
+    // 3. hand out the cards from the middle
     let me = 0, opp = 0, turn = 0
-    let endTimer
 
-    const timer = setInterval(() => {
+    timer = setInterval(() => {
       if (me >= mySize && opp >= oppSize) {
         clearInterval(timer)
-        endTimer = setTimeout(() => setDeal(null), 450)
+        finish()
         return
       }
 
-      // alternate: me, opponent, me, opponent...
       const toMe = me < mySize && (turn % 2 === 0 || opp >= oppSize)
       turn++
 
-     if (toMe) {
-  me++
-  const idx = me - 1
-  flyCard({
-    source: $('[data-fly="deck"]'),
-    getTarget: () => $card(myHandRef.current[idx]),
-    hideTarget: true,
-    duration: 400,      // was 320
-    flip: true          // new
-  })
-} else {
-  // opponent branch: leave exactly as it is (no flip, their cards stay face-down)
-  opp++
-  flyCard({
-    source: $('[data-fly="deck"]'),
-    getTarget: () => $(".opponent .cards"),
-    duration: 320
-  })
-}
+      const source = dealer ? dealer.el : $('[data-fly="deck"]')
+      const fromRect = dealer ? dealer.rect() : undefined
 
+      if (toMe) {
+        me++
+        const idx = me - 1
+        flyCard({
+          source,
+          fromRect,
+          getTarget: () => $card(myHandRef.current[idx]),
+          hideTarget: true,
+          duration: 400,
+          flip: true
+        })
+      } else {
+        opp++
+        flyCard({
+          source,
+          fromRect,
+          getTarget: () => $(".opponent .cards"),
+          duration: 320
+        })
+      }
+
+      dealer?.setCount(52 - me - opp)
       setDeal({ me, opp })
-    }, 65)
+    }, 80)
+  }
 
-    return () => { clearInterval(timer); clearTimeout(endTimer) }
-  }, [dealing])
+  run()
+
+  return () => {
+    cancelled = true
+    clearInterval(timer)
+    dealer?.remove()
+  }
+}, [dealing])
 
   /* NEW tag: clear it when a card lands on the discard pile */
   const discardLen = game?.discard?.length ?? 0
@@ -616,8 +656,8 @@ export function useTongitsGame() {
 
     const gameData = {
       dealId: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-  deck,
-  discard: [],
+      deck,
+      discard: [],
       deck,
       discard: [],
       starter,
@@ -703,7 +743,7 @@ export function useTongitsGame() {
 
     setSortMode(null)
     setGroups(next)
-    
+
     setSelectedCards([])
     await applySortedHand([...rest, ...next.flat()])
     setMessage("Cards grouped")
@@ -712,7 +752,7 @@ export function useTongitsGame() {
   function ungroupSelected() {
     if (selectedCards.length === 0) {
       setGroups([])
-     
+
       setMessage("Groups cleared")
       return
     }
@@ -1008,7 +1048,7 @@ export function useTongitsGame() {
       source: $('[data-fly="deck"]'),
       getTarget: () => $card(card),
       hideTarget: true,
-       flip: true  
+      flip: true
     })
     await update(ref(database, "rooms/" + roomCode), updates)
 
@@ -1201,7 +1241,7 @@ export function useTongitsGame() {
   function sortHandBySuit() {
     setSortMode("suit")
     setGroups([])
-   
+
     applySortedHand(sortHandByMode(myHand, "suit"))
     setMessage("Hand sorted by suit")
   }
@@ -1209,7 +1249,7 @@ export function useTongitsGame() {
   function sortHandByRank() {
     setSortMode("rank")
     setGroups([])
-    
+
     applySortedHand(sortHandByMode(myHand, "rank"))
     setMessage("Hand sorted highest to lowest")
   }

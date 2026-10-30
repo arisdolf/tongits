@@ -268,3 +268,75 @@ export async function flyMeld({ sources, slots = [], getTarget, getFallback }) {
     if (target) target.style.visibility = prevVisibility
   }
 }
+
+/*
+ * Dealer deck: a copy of the deck that slides to the middle of the table,
+ * stays there while cards are dealt, then slides back.
+ */
+export function createDealerDeck(deckEl) {
+  if (!deckEl) return null
+
+  const from = deckEl.getBoundingClientRect()
+  const el = document.createElement("div")
+  el.innerHTML = deckEl.innerHTML
+  el.querySelectorAll("*").forEach(n => { n.style.animation = "none" })
+  const countEl = el.querySelector(".deck-count")
+
+  Object.assign(el.style, {
+    position: "fixed",
+    left: from.left + "px",
+    top: from.top + "px",
+    width: from.width + "px",
+    height: from.height + "px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: "1400",
+    pointerEvents: "none",
+    willChange: "transform"
+  })
+  document.body.appendChild(el)
+
+  const prevVisibility = deckEl.style.visibility
+  deckEl.style.visibility = "hidden"
+
+  const body = document.querySelector(".table-body")?.getBoundingClientRect()
+  const cx = body ? body.left + body.width / 2 : innerWidth / 2
+  const cy = body ? body.top + body.height / 2 : innerHeight / 2
+  const dx = cx - (from.left + from.width / 2)
+  const dy = cy - (from.top + from.height / 2)
+
+  const T = (x, y, s, r) => `translate(${x}px, ${y}px) scale(${s}) rotate(${r}deg)`
+  const SNAP = "cubic-bezier(0.22,1,0.36,1)"
+  const HOME = T(0, 0, 1, 0)
+  const CENTER = T(dx, dy, 1.3, 0)
+
+  const run = async (frames, opts) => {
+    try { await el.animate(frames, { fill: "both", ...opts }).finished } catch { }
+  }
+
+  return {
+    el,
+    rect: () => el.getBoundingClientRect(),
+    setCount(n) { if (countEl) countEl.textContent = n },
+
+    async toCenter() {
+      playCardSound()
+      await run([
+        { transform: HOME },
+        { transform: T(dx, dy - 30, 1.4, -4), offset: 0.6 },
+        { transform: CENTER }
+      ], { duration: 450, easing: SNAP })
+    },
+
+    async home() {
+      await run([{ transform: CENTER }, { transform: HOME }],
+        { duration: 400, easing: SNAP })
+    },
+
+    remove() {
+      el.remove()
+      deckEl.style.visibility = prevVisibility
+    }
+  }
+}
