@@ -1,10 +1,18 @@
 {
+  "Vs7KmBoSsfXjT8cc3BUPwLyEBcx1": {
+    "bestStreak": 5,
+    "gamesPlayed": 12,
+    "losses": 6,
+    "ties": 0,
+    "username": "kino",
+    "wins": 6
+  },
   "ZNTq3qZGoBeYCQ8avnbvotrglOZ2": {
-    "bestStreak": 0,
-    "gamesPlayed": 0,
-    "losses": 0,
+    "bestStreak": 5,
+    "gamesPlayed": 12,
+    "losses": 6,
     "ties": 0,
     "username": "ronik",
-    "wins": 0
+    "wins": 6
   }
 }
