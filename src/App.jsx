@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { createPortal } from "react-dom"
 import {
   DndContext,
@@ -27,7 +28,8 @@ import MusicPlayer from "./components/MusicPlayer"
 import "./styles/App.css"
 import "./styles/Balatro.css"
 import "./styles/Music.css"
-import "./styles/LandScape.css" // keep last so it overrides
+import "./styles/Theme.css"      // new look: after Balatro + Music, before LandScape
+import "./styles/LandScape.css"  // keep last so it overrides
 
 // Prefer whatever is under the pointer (discard pile), else nearest card
 function collisionDetection(args) {
@@ -36,13 +38,12 @@ function collisionDetection(args) {
   const specific = hits.filter(h => h.id !== "new-meld")
   return specific.length ? specific : hits
 }
-import { useState } from "react"
 
 async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text)
   } catch {
-    // fallback: navigator.clipboard only works on https or localhost,
+    // navigator.clipboard only works on https or localhost,
     // so it fails when testing over a LAN IP
     const area = document.createElement("textarea")
     area.value = text
@@ -54,18 +55,20 @@ async function copyText(text) {
     area.remove()
   }
 }
-//test run
-function App() {
 
-  const [emoteOpen, setEmoteOpen] = useState(false)
+function App() {
   const g = useTongitsGame()
+  const [emoteOpen, setEmoteOpen] = useState(false)
   const [musicOpen, setMusicOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+
   const m = useMusic({
     roomCode: g.roomCode,
     user: g.user,
     name: g.myName,
     notify: g.notify
   })
+
   const canMeld =
     !!g.isMyTurn &&
     g.game?.status === "playing" &&
@@ -73,12 +76,21 @@ function App() {
     g.selectedCards.length >= 3 &&
     isValidMeld(g.selectedCards) &&
     (!g.game?.mustMeld || g.selectedCards.includes(g.game.mustMeld))
-  const [copied, setCopied] = useState(false)
+
   function copyRoomCode() {
     copyText(g.roomCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
   }
+
+  // only one top-bar panel open at a time
+  function openMusic() {
+    setEmoteOpen(false)
+    g.setChatOpen(false)
+    if (m.needsTap) m.syncNow()   // this tap lets the browser start audio
+    setMusicOpen(o => !o)
+  }
+
   if (!g.roomCode) {
     return (
       <div className="game">
@@ -97,6 +109,12 @@ function App() {
     )
   }
 
+  const turnLabel = g.dealing
+    ? "Dealing…"
+    : g.isMyTurn
+      ? "Your turn"
+      : "Opponent's turn"
+
   return (
     <div className="game">
 
@@ -112,52 +130,60 @@ function App() {
           </div>
 
           <button className="room-code" onClick={copyRoomCode} title="Copy room code">
-            ROOM {g.roomCode} {copied ? "✔ COPIED" : "⧉"}
+            Room {g.roomCode} {copied ? "· Copied ✔" : "⧉"}
           </button>
 
           <div className="top-actions">
             {g.game && (
               <button
-                className={"music-toggle" + (m.playing ? " is-playing" : "")}
-                onClick={() => {
-                  setEmoteOpen(false)
-                  g.setChatOpen(false)
-                  setMusicOpen(true)
-                }}
+                className={"top-icon-btn music-btn" + (m.playing ? " is-playing" : "") + (musicOpen ? " is-active" : "") + (m.needsTap ? " needs-sync" : "")}
+                onClick={openMusic}
+                aria-label="Music"
+                aria-expanded={musicOpen}
               >
-                🎵 {m.current ? "MUSIC" : "PLAY MUSIC"}
+                <span className="btn-ico">🎵</span>
+                <span className="btn-label">{m.current ? "Music" : "Play music"}</span>
+                {m.playing && (
+                  <span className="eq" aria-hidden="true"><i /><i /><i /></span>
+                )}
               </button>
             )}
+
             <EmoteBar
               onSend={g.sendEmote}
               open={emoteOpen}
               onToggle={() => {
-                if (!emoteOpen) g.setChatOpen(false)
+                if (!emoteOpen) { g.setChatOpen(false); setMusicOpen(false) }
                 setEmoteOpen(o => !o)
               }}
               onClose={() => setEmoteOpen(false)}
             />
+
             <ChatBox
               messages={g.chatMessages}
               myUid={g.user?.uid}
               open={g.chatOpen}
               onToggle={() => {
-                if (!g.chatOpen) setEmoteOpen(false)
+                if (!g.chatOpen) { setEmoteOpen(false); setMusicOpen(false) }
                 g.setChatOpen(o => !o)
               }}
               unread={g.unread}
               onSend={g.sendChat}
               opponentName={g.opponentName}
             />
-            <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
+
+            <button className="leave-button" onClick={g.leaveRoom}>Leave</button>
           </div>
-          <MusicPlayer
-  m={m}
-  open={musicOpen}
-  onClose={() => setMusicOpen(false)}
-  notify={g.notify}
-/>
         </div>
+
+        {/* Music tab: always mounted so the song keeps playing, invisible until opened */}
+        <MusicPlayer
+          m={m}
+          open={musicOpen}
+          onClose={() => setMusicOpen(false)}
+          notify={g.notify}
+        />
+
         {g.activeEmote && getEmote(g.activeEmote.id) && (
           <div
             key={g.activeEmote.ts}
@@ -166,7 +192,6 @@ function App() {
             <EmoteContent emote={getEmote(g.activeEmote.id)} />
           </div>
         )}
-
 
         <DndContext
           sensors={g.sensors}
@@ -183,11 +208,11 @@ function App() {
 
               {g.opponentLeft ? (
                 <div className="disconnect-banner">
-                  ⚠ Opponent left the room — press LEAVE to close it
+                  ⚠ Opponent left the room — press Leave to close it
                 </div>
               ) : g.opponentDisconnected && (
                 <div className="disconnect-banner">
-                  ⚠ Opponent disconnected — waiting for them to return...
+                  ⚠ Opponent disconnected — waiting for them to return…
                 </div>
               )}
             </div>
@@ -205,10 +230,8 @@ function App() {
             </div>
 
             <div className="zone zone-center">
-
               <DeckAndDiscard
                 deckCount={g.deckCount}
-
                 drawing={g.drawing}
                 onDraw={g.drawCard}
                 canDraw={
@@ -222,14 +245,9 @@ function App() {
                 onTakeDiscard={g.takeDiscard}
               />
 
-              <div className="turn-message">
-
-                {g.dealing ? "DEALING..." : g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
+              <div className={"turn-message" + (g.isMyTurn && !g.dealing ? " mine" : "")}>
+                {turnLabel}
               </div>
-
-
-
-
             </div>
 
             <div className="zone zone-hand">
@@ -273,7 +291,6 @@ function App() {
 
         </DndContext>
 
-
         <p className="message">{g.message}</p>
 
         <WinModal
@@ -303,7 +320,5 @@ function App() {
     </div>
   )
 }
-
-
 
 export default App

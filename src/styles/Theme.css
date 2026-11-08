@@ -1,0 +1,406 @@
+/* =========================================================
+   THEME — clean felt-table look (mobile + desktop)
+   Save as src/styles/Theme.css.
+   Import order in App.jsx:
+     App.css → Balatro.css → Music.css → Theme.css → LandScape.css
+   (Theme must come AFTER Balatro and BEFORE LandScape.)
+========================================================= */
+
+:root {
+  --bg: #0a1417;
+  --felt-a: #1f7d5e;
+  --felt-b: #166149;
+  --felt-c: #0c3b2e;
+
+  --panel: #13242a;
+  --panel-2: #1b3139;
+  --line: rgba(255, 255, 255, 0.12);
+
+  --gold: #f5c451;
+  --gold-d: #b98d22;
+  --good: #3ddc84;
+  --good-d: #1f9a58;
+  --blue: #4aa8ff;
+  --blue-d: #2a78c2;
+  --danger: #ff6b5e;
+  --danger-d: #c4443a;
+
+  --text: #eef4f2;
+  --muted: #a3bab4;
+}
+
+/* ---------- PAGE + TABLE ---------- */
+
+.game {
+  background:
+    radial-gradient(900px 500px at 50% -10%, #1a3a42 0%, transparent 65%),
+    var(--bg);
+}
+
+.game .table {
+  background:
+    radial-gradient(ellipse at 50% 42%, var(--felt-a) 0%, var(--felt-b) 55%, var(--felt-c) 100%);
+  background-size: auto;
+  border: 6px solid #0b181c;
+  border-radius: 28px;
+  box-shadow:
+    inset 0 0 0 2px rgba(245, 196, 81, 0.35),   /* thin gold rail */
+    inset 0 0 70px rgba(0, 0, 0, 0.3),
+    0 24px 60px rgba(0, 0, 0, 0.55);
+  animation: tableIn 0.4s ease;
+}
+
+/* soft vignette only (no scanlines) */
+.game .table::after {
+  background: radial-gradient(circle at center, transparent 62%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+.game .message {
+  min-height: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- BUTTONS (flatter, clearer) ---------- */
+
+.game button:not(.card):not(.deck) {
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  border-radius: 12px;
+  text-shadow: none;
+  background: var(--b, var(--blue));
+  color: #fff;
+  box-shadow: 0 2px 0 var(--bd, var(--blue-d)), 0 5px 12px rgba(0, 0, 0, 0.25);
+}
+
+.game button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- TOP BAR ---------- */
+
+.game .top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(8, 20, 24, 0.55);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.game .top-bar strong {
+  font-size: 18px;
+  letter-spacing: 3px;
+  color: var(--text);
+  text-shadow: none;
+}
+
+.game .top-score {
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: var(--gold);
+}
+
+.game .top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* room code chip */
+.game .top-bar button.room-code {
+  --b: rgba(0, 0, 0, 0.3);
+  --bd: transparent;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  color: var(--gold);
+  border: 1px dashed rgba(245, 196, 81, 0.55);
+  box-shadow: none;
+}
+
+/* music / emote / chat: same square icon buttons */
+.game .top-actions button.top-icon-btn,
+.game .top-actions .chat-wrap button.chat-toggle,
+.game .top-actions .emote-bar button.emote-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px !important;
+  font-size: 16px;
+  background: var(--panel-2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px;
+  box-shadow: none !important;
+}
+
+.game .top-actions button.top-icon-btn .btn-label {
+  font-size: 12px;
+  letter-spacing: 0.4px;
+}
+
+.game .top-actions button.top-icon-btn.is-playing,
+.game .top-actions button.top-icon-btn.is-active {
+  border-color: var(--gold) !important;
+}
+
+/* little equalizer shows while a song is playing */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.eq i {
+  width: 3px;
+  height: 30%;
+  background: var(--good);
+  border-radius: 2px;
+  animation: eqBar 0.9s ease-in-out infinite;
+}
+.eq i:nth-child(2) { animation-delay: 0.15s; }
+.eq i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes eqBar {
+  0%, 100% { height: 30%; }
+  50%      { height: 100%; }
+}
+
+.game .top-actions button.leave-button {
+  height: 40px;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  background: transparent !important;
+  color: var(--danger) !important;
+  border: 1px solid rgba(255, 107, 94, 0.55) !important;
+  box-shadow: none !important;
+}
+.game .top-actions button.leave-button:hover:not(:disabled) {
+  background: rgba(255, 107, 94, 0.15) !important;
+}
+
+/* browser blocked autoplay: music button pulses, one tap fixes it */
+.game .top-actions button.top-icon-btn.needs-sync {
+  border-color: var(--gold) !important;
+  animation: turnPulse 1.2s infinite;
+}
+
+/* ---------- TURN PILL + PLAYER NAMES ---------- */
+
+.game .turn-message {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 1px;
+  animation: none;
+}
+.game .turn-message.mine {
+  background: var(--good);
+  border-color: transparent;
+  color: #06240f;
+  box-shadow: 0 0 0 4px rgba(61, 220, 132, 0.25);
+  animation: turnPulse 1.6s infinite;
+}
+
+.game .player-name {
+  display: inline-block;
+  padding: 4px 12px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+
+/* ---------- DECK / DISCARD ---------- */
+
+.game .pile-label {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.game .deck-count {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid var(--line);
+  color: var(--text);
+  box-shadow: none;
+  border-radius: 999px;
+}
+.game .discard:has(.discard-empty) {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- MELDS ---------- */
+
+.game .meld-area {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: none;
+}
+.game .meld {
+  background: rgba(8, 20, 24, 0.6);
+  border-radius: 12px;
+  box-shadow: none;
+}
+.game .meld-title { color: var(--muted); }
+
+/* ---------- HAND BUTTONS ---------- */
+
+.game .table .hand-actions { gap: 8px; margin-top: 16px; }
+
+.game .table .hand-actions button {
+  --b: var(--panel-2);
+  --bd: #0c181b;
+  color: var(--text);
+  border: 1px solid var(--line);
+  filter: none;
+}
+.game .table .hand-actions button:nth-child(1) { --b: #2b4a52; --bd: #10262b; }   /* meld, idle */
+.game .table .hand-actions button:nth-child(4) { --b: var(--danger); --bd: var(--danger-d); border-color: transparent; color: #fff; }
+.game .table .hand-actions button:nth-child(5):not(:disabled) {
+  --b: transparent; --bd: transparent;
+  color: var(--gold);
+  box-shadow: none;
+}
+.game .table .hand-actions button:disabled { opacity: 0.4; filter: none; }
+
+/* meld is lit green only when the selection is a valid meld */
+.game .table .hand-actions button.can-meld:not(:disabled) {
+  --b: var(--good);
+  --bd: var(--good-d);
+  color: #06240f;
+  border-color: transparent;
+  animation: meldReady 1s ease-in-out infinite;
+}
+
+/* ---------- PANELS (one consistent surface) ---------- */
+
+.game .lobby,
+.game .modal-panel,
+.game .chat-panel,
+.game .emote-panel,
+.game .sort-menu,
+.game .toast,
+.game .auth-modal,
+.game .auth-dropdown {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+.game .toast { border-radius: 14px; }
+.game .toast-error { background: #6b241f; border-color: #d65a3c; color: #ffd9d4; }
+.game .toast-warn  { background: #5b4716; border-color: var(--gold); color: #ffeaa6; }
+
+.game .chat-header,
+.game .modal-header { color: var(--gold); border-bottom: 1px solid var(--line); }
+
+.game .chat-form input,
+.game .lobby input,
+.game .auth-modal input,
+.game .rename-form input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+}
+.game .chat-form input:focus,
+.game .lobby input:focus,
+.game .auth-modal input:focus,
+.game .rename-form input:focus { border-color: var(--gold); }
+
+/* ---------- LOBBY ---------- */
+
+.game .title {
+  animation: none;
+  font-size: 42px;
+  letter-spacing: 6px;
+  text-shadow: none;
+  background: linear-gradient(180deg, #ffffff 20%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.game .subtitle { color: var(--muted); }
+
+.game .room-buttons button { --b: var(--good); --bd: var(--good-d); color: #06240f; }
+.game .join-area button    { --b: var(--blue); --bd: var(--blue-d); }
+
+/* ---------- WIN MODAL ---------- */
+
+.game .win-title { font-size: 28px; text-shadow: none; }
+.game .win-actions { background: var(--panel); }
+
+/* ---------- DESKTOP ---------- */
+
+@media (min-width: 1024px) {
+  .game .table { max-width: 1180px; padding: 28px 40px; }
+  .game .top-bar strong { font-size: 20px; }
+}
+
+/* ---------- MOBILE PORTRAIT ---------- */
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .game .top-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand actions"
+      "room  room";
+    row-gap: 8px;
+    padding: 8px;
+  }
+  .game .top-actions { gap: 6px; }
+
+  /* icon-only buttons so the bar fits on small phones */
+  .game .top-actions button.top-icon-btn .btn-label { display: none; }
+  .game .top-actions button.top-icon-btn,
+  .game .top-actions .chat-wrap button.chat-toggle,
+  .game .top-actions .emote-bar button.emote-toggle {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px !important;
+  }
+  .game .top-actions button.leave-button {
+    height: 36px;
+    padding: 0 10px !important;
+  }
+  .game .top-bar button.room-code { height: 34px; font-size: 11px; }
+}
+
+/* ---------- SHORT LANDSCAPE PHONES ---------- */
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .game .top-bar { padding: 3px 8px; border-radius: 12px; }
+  .game .top-actions button.top-icon-btn,
+  .game .top-actions .chat-wrap button.chat-toggle,
+  .game .top-actions .emote-bar button.emote-toggle,
+  .game .top-actions button.leave-button,
+  .game .top-bar button.room-code { height: 30px; }
+  .game .top-actions button.top-icon-btn .btn-label { display: none; }
+  .game .turn-message { margin-top: 4px; padding: 4px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eq i, .game .turn-message.mine { animation: none !important; }
+}
