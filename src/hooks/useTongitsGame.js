@@ -1275,7 +1275,7 @@ export function useTongitsGame() {
   const discardPile = game?.discard || []
 
   return {
-    roomCode, inputCode, setInputCode, message, toast,
+    roomCode, inputCode, setInputCode, message, toast, notify,
     dismissToast: () => setToast(null),
     room, game, myHand, opponentHand,
     opponentCount: deal ? deal.opp : opponentHand.length,

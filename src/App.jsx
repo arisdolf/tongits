@@ -21,8 +21,12 @@ import DiscardHistoryModal from "./components/DiscardHistoryModal"
 import WinModal from "./components/WinModal"
 import Toast from "./components/Toast"
 
+import { useMusic } from "./hooks/useMusic"
+import MusicPlayer from "./components/MusicPlayer"
+
 import "./styles/App.css"
 import "./styles/Balatro.css"
+import "./styles/Music.css"
 import "./styles/LandScape.css" // keep last so it overrides
 
 // Prefer whatever is under the pointer (discard pile), else nearest card
@@ -55,6 +59,13 @@ function App() {
 
   const [emoteOpen, setEmoteOpen] = useState(false)
   const g = useTongitsGame()
+  const [musicOpen, setMusicOpen] = useState(false)
+  const m = useMusic({
+    roomCode: g.roomCode,
+    user: g.user,
+    name: g.myName,
+    notify: g.notify
+  })
   const canMeld =
     !!g.isMyTurn &&
     g.game?.status === "playing" &&
@@ -88,9 +99,9 @@ function App() {
 
   return (
     <div className="game">
-  
-        <div className={"table" + (g.dealing ? " dealing" : "")}>
-        
+
+      <div className={"table" + (g.dealing ? " dealing" : "")}>
+
         <div className="top-bar">
           <div className="top-brand">
             <strong>TONGITS</strong>
@@ -105,6 +116,18 @@ function App() {
           </button>
 
           <div className="top-actions">
+            {g.game && (
+              <button
+                className={"music-toggle" + (m.playing ? " is-playing" : "")}
+                onClick={() => {
+                  setEmoteOpen(false)
+                  g.setChatOpen(false)
+                  setMusicOpen(true)
+                }}
+              >
+                🎵 {m.current ? "MUSIC" : "PLAY MUSIC"}
+              </button>
+            )}
             <EmoteBar
               onSend={g.sendEmote}
               open={emoteOpen}
@@ -128,6 +151,12 @@ function App() {
             />
             <button className="leave-button" onClick={g.leaveRoom}>LEAVE</button>
           </div>
+          <MusicPlayer
+  m={m}
+  open={musicOpen}
+  onClose={() => setMusicOpen(false)}
+  notify={g.notify}
+/>
         </div>
         {g.activeEmote && getEmote(g.activeEmote.id) && (
           <div
@@ -138,7 +167,7 @@ function App() {
           </div>
         )}
 
-        
+
         <DndContext
           sensors={g.sensors}
           collisionDetection={collisionDetection}
@@ -178,8 +207,8 @@ function App() {
             <div className="zone zone-center">
 
               <DeckAndDiscard
-              deckCount={g.deckCount}
-            
+                deckCount={g.deckCount}
+
                 drawing={g.drawing}
                 onDraw={g.drawCard}
                 canDraw={
@@ -194,7 +223,7 @@ function App() {
               />
 
               <div className="turn-message">
-    
+
                 {g.dealing ? "DEALING..." : g.isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}
               </div>
 
