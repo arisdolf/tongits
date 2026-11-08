@@ -193,7 +193,7 @@ function MusicPlayer({ m, open, onClose, notify }) {
                     ) : (
                       <>
                         <button className="mbtn mbtn-big" onClick={m.togglePlay}>
-                          {m.playing ? "⏸ Pause" : "▶ Play"}
+                          {m.playing ? " Pause" : " Play"}
                         </button>
                         <button className="mbtn mbtn-big" onClick={m.skip}>⏭ Next</button>
                       </>
