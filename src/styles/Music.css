@@ -45,13 +45,31 @@
 
 .music-bar.music-empty { display: none; }
 
+/* the video lives inside the music tab */
 .music-video {
-  flex: none;
-  width: 96px;
-  height: 54px;
+  width: min(100%, calc(34dvh * 16 / 9));
+  aspect-ratio: 16 / 9;
+  margin: 0 auto 10px;
   background: #000;
-  border-radius: 6px;
+  border: 3px solid var(--panel-hi, #4f6367);
+  border-radius: 8px;
   overflow: hidden;
+}
+
+.music-video.music-video-empty { display: none; }
+
+.music-meta { cursor: pointer; }
+
+/* tab closed: slide it off-screen but keep it mounted so music keeps playing */
+.music-overlay.music-closed {
+  pointer-events: none;
+  background: transparent;
+  animation: none;
+}
+
+.music-overlay.music-closed .music-sheet {
+  transform: translateY(120%);
+  animation: none;
 }
 
 .music-box,
@@ -87,7 +105,6 @@
 
 @media (orientation: landscape) and (max-height: 520px) {
   .music-bar { margin-top: 2px; padding: 3px 6px; gap: 6px; }
-  .music-video { width: 64px; height: 36px; }
   .music-sub { display: none; }
 }
 
