@@ -1,9 +1,7 @@
 import { buildGameReport } from "../utils/stats"
 import "../styles/Modal.css"
 import "../styles/WinModal.css"
-import { useState, useEffect, useRef } from "react"
-
-const EXIT_MS = 450
+import { useState, useEffect } from "react"
 
 function WinModal({
   game,
@@ -21,8 +19,6 @@ function WinModal({
 }) {
 
   const [musicOn, setMusicOn] = useState(true)
-  const [mounted, setMounted] = useState(false)
-  const snapRef = useRef(null)
 
   const finished = !!game && game.status === "finished" && !!room
 
@@ -52,29 +48,11 @@ function WinModal({
     return () => { audio.pause(); audio.currentTime = 0 }
   }, [playLoseMusic])
 
-  /* remember the last finished game so the modal can slide out showing it */
-  useEffect(() => {
-    if (finished) {
-      snapRef.current = { game, room, myHand, opponentHand, opponentGone, myName, opponentName }
-    }
-  })
+  // Unmount as soon as a rematch starts. Keeping a snapshot for an exit
+  // animation briefly covered the new deal with the previous result screen.
+  if (!finished) return null
 
-  /* keep it mounted for the exit animation */
-  useEffect(() => {
-    if (finished) { setMounted(true); return }
-    if (!mounted) return
-    const t = setTimeout(() => setMounted(false), EXIT_MS)
-    return () => clearTimeout(t)
-  }, [finished])
-
-  if (!finished && !mounted) return null
-
-  const d = finished
-    ? { game, room, myHand, opponentHand, opponentGone, myName, opponentName }
-    : snapRef.current
-  if (!d) return null
-
-  const leaving = !finished
+  const d = { game, room, myHand, opponentHand, opponentGone, myName, opponentName }
   const g = d.game
   const r = d.room
 
@@ -160,7 +138,7 @@ function WinModal({
   }
 
   return (
-    <div className={"modal-overlay win-overlay" + (leaving ? " win-overlay-leaving" : "")}>
+    <div className="modal-overlay win-overlay">
 
       <div className="modal-panel win-panel">
 

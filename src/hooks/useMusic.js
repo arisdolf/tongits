@@ -280,6 +280,19 @@ export function useMusic({ roomCode, user, name, notify }) {
     })
   }
 
+  // Persist a drag reorder against the latest shared queue. A transaction keeps
+  // concurrent additions/removals from being overwritten by a stale snapshot.
+  async function reorder(orderedIds) {
+    if (!roomCode || !Array.isArray(orderedIds)) return
+    await runTransaction(musicRefDb(), m => {
+      if (!m) return
+      const queue = toList(m.queue)
+      const byId = new Map(queue.map(song => [song.id, song]))
+      if (orderedIds.length !== queue.length || orderedIds.some(id => !byId.has(id))) return
+      return { ...m, queue: orderedIds.map(id => byId.get(id)) }
+    })
+  }
+
   // called from a tap, so the browser allows audio to start
   function syncNow() {
     sync()
@@ -303,7 +316,7 @@ export function useMusic({ roomCode, user, name, notify }) {
     playing: !!music?.playing,
     needsTap,
     addSong, togglePlay, seek, skip,
-    playNow, playNext, remove,
+    playNow, playNext, remove, reorder,
     syncNow, getTime
   }
 }

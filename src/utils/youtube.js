@@ -3,7 +3,7 @@
  * - search needs VITE_YT_API_KEY in .env (YouTube Data API v3)
  * - pasting a link needs no key
  */
-const KEY = import.meta.env.VITE_YT_API_KEY
+const KEY = import.meta.env.VITE_YT_API_KEY?.trim()
 
 export const thumbUrl = videoId => `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`
 
@@ -23,7 +23,7 @@ function decode(s) {
 }
 
 export async function searchVideos(q) {
-  if (!KEY) throw new Error("NO_KEY")
+  if (!KEY) throw new Error("YouTube search needs VITE_YT_API_KEY in this site's build settings.")
 
   const params = new URLSearchParams({
     part: "snippet",
@@ -37,7 +37,19 @@ export async function searchVideos(q) {
 
   const res = await fetch("https://www.googleapis.com/youtube/v3/search?" + params)
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error?.message || "Search failed")
+  if (!res.ok) {
+    const reason = data.error?.errors?.[0]?.reason
+    const message = reason === "quotaExceeded" || reason === "dailyLimitExceeded"
+      ? "YouTube search limit reached. Try again tomorrow."
+      : reason === "keyInvalid"
+        ? "YouTube search key is invalid. Check VITE_YT_API_KEY."
+        : reason === "accessNotConfigured"
+          ? "Enable YouTube Data API v3 for the Google Cloud project."
+          : reason === "ipRefererBlocked"
+            ? "This site is blocked by the YouTube API key's website restrictions."
+            : data.error?.message || "YouTube search failed. Check the API key and try again."
+    throw new Error(message)
+  }
 
   return (data.items || []).map(item => ({
     videoId: item.id.videoId,

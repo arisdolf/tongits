@@ -251,3 +251,64 @@
 .my-hand .card.group-start { margin-left: 6px; }
 
 }
+
+/* Keep the game inside the visible phone viewport in portrait mode. */
+@media (max-width: 600px) and (orientation: portrait) {
+    html,
+    body,
+    #root {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .game {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+        padding: 6px;
+    }
+
+    .game > .table {
+        height: 100%;
+        min-height: 0;
+        padding: 8px 7px max(8px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .table-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        grid-template-areas:
+            "opp"
+            "melds"
+            "center"
+            "hand";
+        gap: 4px;
+    }
+
+    .zone-opp { grid-area: opp; min-width: 0; }
+    .zone-melds {
+        grid-area: melds;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+    .zone-center { grid-area: center; }
+    .zone-hand { grid-area: hand; min-width: 0; }
+
+    .game .table .hand-actions { margin-top: 6px; }
+    .game .message { min-height: 14px; margin: 2px 0 0; font-size: 10px; }
+    .player-name,
+    .card-help,
+    .starter-info,
+    .selection-info { display: none; }
+
+    .lobby {
+        max-height: calc(100dvh - 12px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
