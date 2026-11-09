@@ -169,9 +169,7 @@ function App() {
               onSend={g.sendChat}
               opponentName={g.opponentName}
             />
-          </div>
 
-          <div className="top-actions">
             <EmoteBar
               onSend={g.sendEmote}
               open={emoteOpen}
@@ -181,7 +179,9 @@ function App() {
               }}
               onClose={() => setEmoteOpen(false)}
             />
+          </div>
 
+          <div className="top-actions">
             <button className="leave-button" onClick={g.leaveRoom}>Leave</button>
           </div>
         </div>

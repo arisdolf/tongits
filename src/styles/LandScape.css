@@ -280,7 +280,7 @@
     .table-body {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto minmax(0, 1fr) auto auto;
+        grid-template-rows: auto minmax(clamp(78px, 14dvh, 110px), 1fr) auto auto;
         grid-template-areas:
             "opp"
             "melds"
@@ -296,6 +296,13 @@
         overflow-y: auto;
         overscroll-behavior: contain;
     }
+    .zone-melds .meld-area {
+        min-height: 100%;
+        margin: 0;
+        padding: 5px;
+        border: 1px dashed rgba(245, 196, 81, 0.38);
+    }
+    .zone-melds .meld-list { align-content: start; }
     .zone-center { grid-area: center; }
     .zone-hand { grid-area: hand; min-width: 0; }
 

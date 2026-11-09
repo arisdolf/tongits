@@ -135,7 +135,7 @@
 /* music / emote / chat: same square icon buttons */
 .game .top-social-controls button.top-icon-btn,
 .game .top-social-controls .chat-wrap button.chat-toggle,
-.game .top-actions .emote-bar button.emote-toggle {
+.game .top-social-controls .emote-bar button.emote-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -385,7 +385,7 @@
   .game .top-social-controls button.top-icon-btn .btn-label { display: none; }
   .game .top-social-controls button.top-icon-btn,
   .game .top-social-controls .chat-wrap button.chat-toggle,
-  .game .top-actions .emote-bar button.emote-toggle {
+  .game .top-social-controls .emote-bar button.emote-toggle {
     min-width: 36px;
     height: 36px;
     padding: 0 8px !important;
@@ -403,7 +403,7 @@
   .game .top-bar { padding: 3px 8px; border-radius: 12px; }
   .game .top-social-controls button.top-icon-btn,
   .game .top-social-controls .chat-wrap button.chat-toggle,
-  .game .top-actions .emote-bar button.emote-toggle,
+  .game .top-social-controls .emote-bar button.emote-toggle,
   .game .top-actions button.leave-button,
   .game .top-bar button.room-code { height: 30px; }
   .game .top-social-controls button.top-icon-btn .btn-label { display: none; }
