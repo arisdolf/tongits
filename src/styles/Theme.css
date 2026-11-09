@@ -113,6 +113,12 @@
   gap: 8px;
 }
 
+.game .top-social-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* room code chip */
 .game .top-bar button.room-code {
   --b: rgba(0, 0, 0, 0.3);
@@ -127,8 +133,8 @@
 }
 
 /* music / emote / chat: same square icon buttons */
-.game .top-actions button.top-icon-btn,
-.game .top-actions .chat-wrap button.chat-toggle,
+.game .top-social-controls button.top-icon-btn,
+.game .top-social-controls .chat-wrap button.chat-toggle,
 .game .top-actions .emote-bar button.emote-toggle {
   display: inline-flex;
   align-items: center;
@@ -145,13 +151,13 @@
   box-shadow: none !important;
 }
 
-.game .top-actions button.top-icon-btn .btn-label {
+.game .top-social-controls button.top-icon-btn .btn-label {
   font-size: 12px;
   letter-spacing: 0.4px;
 }
 
-.game .top-actions button.top-icon-btn.is-playing,
-.game .top-actions button.top-icon-btn.is-active {
+.game .top-social-controls button.top-icon-btn.is-playing,
+.game .top-social-controls button.top-icon-btn.is-active {
   border-color: var(--gold) !important;
 }
 
@@ -190,7 +196,7 @@
 }
 
 /* browser blocked autoplay: music button pulses, one tap fixes it */
-.game .top-actions button.top-icon-btn.needs-sync {
+.game .top-social-controls button.top-icon-btn.needs-sync {
   border-color: var(--gold) !important;
   animation: turnPulse 1.2s infinite;
 }
@@ -365,17 +371,20 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "brand actions"
-      "room  room";
+      "controls brand"
+      "room     actions";
     row-gap: 8px;
     padding: 8px;
   }
-  .game .top-actions { gap: 6px; }
+  .game .top-social-controls { grid-area: controls; justify-self: start; gap: 6px; }
+  .game .top-brand { grid-area: brand; justify-self: end; }
+  .game .top-actions { grid-area: actions; justify-self: end; gap: 6px; }
+  .game .top-bar > .room-code { grid-area: room; justify-self: start; }
 
   /* icon-only buttons so the bar fits on small phones */
-  .game .top-actions button.top-icon-btn .btn-label { display: none; }
-  .game .top-actions button.top-icon-btn,
-  .game .top-actions .chat-wrap button.chat-toggle,
+  .game .top-social-controls button.top-icon-btn .btn-label { display: none; }
+  .game .top-social-controls button.top-icon-btn,
+  .game .top-social-controls .chat-wrap button.chat-toggle,
   .game .top-actions .emote-bar button.emote-toggle {
     min-width: 36px;
     height: 36px;
@@ -392,12 +401,12 @@
 
 @media (orientation: landscape) and (max-height: 520px) {
   .game .top-bar { padding: 3px 8px; border-radius: 12px; }
-  .game .top-actions button.top-icon-btn,
-  .game .top-actions .chat-wrap button.chat-toggle,
+  .game .top-social-controls button.top-icon-btn,
+  .game .top-social-controls .chat-wrap button.chat-toggle,
   .game .top-actions .emote-bar button.emote-toggle,
   .game .top-actions button.leave-button,
   .game .top-bar button.room-code { height: 30px; }
-  .game .top-actions button.top-icon-btn .btn-label { display: none; }
+  .game .top-social-controls button.top-icon-btn .btn-label { display: none; }
   .game .turn-message { margin-top: 4px; padding: 4px 12px; }
 }
 

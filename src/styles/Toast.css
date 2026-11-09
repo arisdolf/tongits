@@ -22,6 +22,19 @@
   animation: toastIn 0.25s ease;
 }
 
+.toast-action-hint {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.toast[role="button"]:focus-visible {
+  outline: 2px solid #e6c35c;
+  outline-offset: 3px;
+}
+
 .toast-error {
   background: rgba(120, 35, 25, 0.96);
   border-color: #d65a3c;

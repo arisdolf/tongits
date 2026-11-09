@@ -91,6 +91,15 @@ function App() {
     setMusicOpen(o => !o)
   }
 
+  function handleToastClick() {
+    if (g.toast?.action === "open-chat") {
+      setMusicOpen(false)
+      setEmoteOpen(false)
+      g.setChatOpen(true)
+    }
+    g.dismissToast()
+  }
+
   if (!g.roomCode) {
     return (
       <div className="game">
@@ -104,7 +113,7 @@ function App() {
           onCreateRoom={g.createRoom}
           onJoinRoom={g.joinRoom}
         />
-        <Toast key={g.toast?.id} toast={g.toast} onClose={g.dismissToast} />
+        <Toast key={g.toast?.id} toast={g.toast} onClose={g.dismissToast} onClick={handleToastClick} />
       </div>
     )
   }
@@ -132,7 +141,7 @@ function App() {
             Room {g.roomCode} {copied ? "· Copied ✔" : "⧉"}
           </button>
 
-          <div className="top-actions">
+          <div className="top-social-controls">
             {g.game && (
               <button
                 className={"top-icon-btn music-btn" + (m.playing ? " is-playing" : "") + (musicOpen ? " is-active" : "") + (m.needsTap ? " needs-sync" : "")}
@@ -148,16 +157,6 @@ function App() {
               </button>
             )}
 
-            <EmoteBar
-              onSend={g.sendEmote}
-              open={emoteOpen}
-              onToggle={() => {
-                if (!emoteOpen) { g.setChatOpen(false); setMusicOpen(false) }
-                setEmoteOpen(o => !o)
-              }}
-              onClose={() => setEmoteOpen(false)}
-            />
-
             <ChatBox
               messages={g.chatMessages}
               myUid={g.user?.uid}
@@ -169,6 +168,18 @@ function App() {
               unread={g.unread}
               onSend={g.sendChat}
               opponentName={g.opponentName}
+            />
+          </div>
+
+          <div className="top-actions">
+            <EmoteBar
+              onSend={g.sendEmote}
+              open={emoteOpen}
+              onToggle={() => {
+                if (!emoteOpen) { g.setChatOpen(false); setMusicOpen(false) }
+                setEmoteOpen(o => !o)
+              }}
+              onClose={() => setEmoteOpen(false)}
             />
 
             <button className="leave-button" onClick={g.leaveRoom}>Leave</button>
@@ -315,7 +326,7 @@ function App() {
 
       </div>
 
-      <Toast key={g.toast?.id} toast={g.toast} onClose={g.dismissToast} />
+      <Toast key={g.toast?.id} toast={g.toast} onClose={g.dismissToast} onClick={handleToastClick} />
     </div>
   )
 }

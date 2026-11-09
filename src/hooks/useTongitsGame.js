@@ -67,7 +67,8 @@ export function useTongitsGame() {
   const prevDiscardRef = useRef(null)
   const [username, setUsername] = useState(() => localStorage.getItem("username") || "")
   function notify(text, type = "info") {
-    setToast({ id: Date.now(), text, type })
+    const action = String(text).startsWith("\u{1F4AC} ") ? "open-chat" : null
+    setToast({ id: Date.now(), text, type, action })
   }
   function warn(text) { notify(text, "warn") }
 

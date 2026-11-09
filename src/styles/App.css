@@ -78,7 +78,8 @@
 /* Keep the room code at the left edge and the player score at the right. */
 .top-bar > .room-code { order: 0; }
 .top-bar > .top-brand { order: 1; align-items: flex-end; text-align: right; }
-.top-bar > .top-actions { order: 2; }
+.top-bar > .top-social-controls { order: 2; }
+.top-bar > .top-actions { order: 3; }
 
 .top-bar strong {
   font-size: 20px;
@@ -198,6 +199,12 @@
 }
 
 .top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-social-controls {
   display: flex;
   align-items: center;
   gap: 8px;
