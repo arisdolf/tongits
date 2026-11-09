@@ -420,15 +420,15 @@ button:disabled {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "brand actions"
+      "room actions"
       "room  room";
     row-gap: 8px;
     align-items: center;
   }
 
-  .top-brand   { grid-area: brand; min-width: 0; }
+  .top-brand   { grid-area: room; min-width: 0; justify-self: end; }
   .top-actions { grid-area: actions; flex-shrink: 0; gap: 6px; }
-  .top-bar > .room-code { grid-area: room; justify-self: center; }
+  .top-bar > .room-code { grid-area: room; justify-self: start; }
 
   .top-bar strong { font-size: 18px; }
 

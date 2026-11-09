@@ -75,6 +75,11 @@
   color: #c7d8d0;
 }
 
+/* Keep the room code at the left edge and the player score at the right. */
+.top-bar > .room-code { order: 0; }
+.top-bar > .top-brand { order: 1; align-items: flex-end; text-align: right; }
+.top-bar > .top-actions { order: 2; }
+
 .top-bar strong {
   font-size: 20px;
   color: white;

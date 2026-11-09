@@ -122,7 +122,6 @@ function App() {
 
         <div className="top-bar">
           <div className="top-brand">
-            <strong>TONGITS</strong>
             <span className="top-score">
               {g.myName} {g.scoreboard.me} – {g.scoreboard.opp} {g.opponentName}
               {g.scoreboard.myStreak >= 2 ? ` 🔥${g.scoreboard.myStreak}` : ""}
